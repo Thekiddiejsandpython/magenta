@@ -43,7 +43,7 @@ static inline void shutdown_early_init_console() {
     gfxconsole_bind_display(NULL, NULL);
 }
 #else
-static inline void shutdown_early_init_console() { }
+static inline void shutdown_early_init_console() {}
 #endif
 
 #if WITH_DEV_PCIE
@@ -65,18 +65,18 @@ public:
                                                                 lut));
         if (!ac.check()) {
             TRACEF("Out of memory attemping to create PCIe root to manage bus ID 0x%02x\n",
-                    managed_bus_id);
+                   managed_bus_id);
             return nullptr;
         }
 
         return root;
     }
 
-    status_t Swizzle(uint dev_id, uint func_id, uint pin, uint *irq) override {
+    status_t Swizzle(uint dev_id, uint func_id, uint pin, uint* irq) override {
         if ((irq == nullptr) ||
-            (dev_id  >= countof(lut_)) ||
+            (dev_id >= countof(lut_)) ||
             (func_id >= countof(lut_[dev_id])) ||
-            (pin     >= countof(lut_[dev_id][func_id])))
+            (pin >= countof(lut_[dev_id][func_id])))
             return ERR_INVALID_ARGS;
 
         *irq = lut_[dev_id][func_id][pin];
@@ -192,9 +192,9 @@ mx_status_t sys_pci_init(mx_handle_t handle, const mx_pci_init_arg_t* _init_buf,
     // Check for a quirk that we've seen.  Some systems will report overly large
     // PCIe config regions that collide with architectural registers.
     unsigned int num_buses = arg->ecam_windows[0].bus_end -
-            arg->ecam_windows[0].bus_start + 1;
+                             arg->ecam_windows[0].bus_start + 1;
     paddr_t end = arg->ecam_windows[0].base +
-            num_buses * PCIE_ECAM_BYTE_PER_BUS;
+                  num_buses * PCIE_ECAM_BYTE_PER_BUS;
     const paddr_t high_limit = 0xfec00000ULL;
     if (end > high_limit) {
         TRACEF("PCIe config space collides with arch devices, truncating\n");
@@ -205,7 +205,7 @@ mx_status_t sys_pci_init(mx_handle_t handle, const mx_pci_init_arg_t* _init_buf,
         arg->ecam_windows[0].size = ROUNDDOWN(end - arg->ecam_windows[0].base,
                                               PCIE_ECAM_BYTE_PER_BUS);
         uint64_t new_bus_end = (arg->ecam_windows[0].size / PCIE_ECAM_BYTE_PER_BUS) +
-                arg->ecam_windows[0].bus_start - 1;
+                               arg->ecam_windows[0].bus_start - 1;
         if (new_bus_end >= PCIE_MAX_BUSSES) {
             return ERR_INVALID_ARGS;
         }
@@ -229,11 +229,11 @@ mx_status_t sys_pci_init(mx_handle_t handle, const mx_pci_init_arg_t* _init_buf,
     // of the ECAM ranges from ACPI, as well as the appropriate bus start/end
     // ranges.
     status_t ret;
-    const PcieBusDriver::EcamRegion ecam {
+    const PcieBusDriver::EcamRegion ecam{
         .phys_base = static_cast<paddr_t>(arg->ecam_windows[0].base),
-        .size      = arg->ecam_windows[0].size,
+        .size = arg->ecam_windows[0].size,
         .bus_start = 0x00,
-        .bus_end   = static_cast<uint8_t>((arg->ecam_windows[0].size / PCIE_ECAM_BYTE_PER_BUS) - 1),
+        .bus_end = static_cast<uint8_t>((arg->ecam_windows[0].size / PCIE_ECAM_BYTE_PER_BUS) - 1),
     };
 
     ret = pcie->AddEcamRegion(ecam);
@@ -375,13 +375,18 @@ mx_status_t sys_pci_reset_device(mx_handle_t handle) {
     return pci_device->ResetDevice();
 }
 
-mx_handle_t sys_pci_map_mmio(mx_handle_t handle, uint32_t bar_num, mx_cache_policy_t cache_policy) {
+mx_status_t sys_pci_map_mmio(mx_handle_t handle, uint32_t bar_num, mx_cache_policy_t cache_policy, mx_handle_t* out_handle) {
     /**
      * Performs MMIO mapping for the PCI device associated with the handle.
      * @param handle Handle associated with a PCI device
      * @param bar_num BAR number
+     * @param cache_policy cache policy to use for mapping
+     * @param out_handle point to store the mapped handle in
      */
     LTRACEF("handle %d\n", handle);
+    if (!out_handle) {
+        return ERR_INVALID_ARGS;
+    }
 
     // Caller only gets to control the cache policy, nothing else.
     if (cache_policy & ~ARCH_MMU_FLAG_CACHE_MASK)
@@ -404,9 +409,12 @@ mx_handle_t sys_pci_map_mmio(mx_handle_t handle, uint32_t bar_num, mx_cache_poli
     if (!mmio_handle)
         return ERR_NO_MEMORY;
 
-    mx_handle_t ret_val = up->MapHandleToValue(mmio_handle);
+    if (make_user_ptr(out_handle).copy_to_user(up->MapHandleToValue(mmio_handle)) != NO_ERROR) {
+        return ERR_INVALID_ARGS;
+    }
     up->AddHandle(mxtl::move(mmio_handle));
-    return ret_val;
+
+    return NO_ERROR;
 }
 
 mx_status_t sys_pci_io_write(mx_handle_t handle, uint32_t bar_num, uint32_t offset, uint32_t len,
@@ -435,14 +443,20 @@ mx_status_t sys_pci_io_read(mx_handle_t handle, uint32_t bar_num, uint32_t offse
     return ERR_NOT_SUPPORTED;
 }
 
-mx_handle_t sys_pci_map_interrupt(mx_handle_t handle_value, int32_t which_irq) {
+mx_status_t sys_pci_map_interrupt(mx_handle_t handle_value,
+                                  int32_t which_irq,
+                                  mx_handle_t* out_handle) {
     /**
      * Returns a handle that can be waited on.
      * @param handle Handle associated with a PCI device
      * @param which_irq Identifier for an IRQ, returned in sys_pci_get_nth_device, or -1 for legacy
      * interrupts
+     * @param out_handle Pointer to a handle to store our new 
      */
     LTRACEF("handle %d\n", handle_value);
+    if (!out_handle) {
+        return ERR_INVALID_ARGS;
+    }
 
     auto up = ProcessDispatcher::GetCurrent();
 
@@ -467,7 +481,7 @@ mx_handle_t sys_pci_map_interrupt(mx_handle_t handle_value, int32_t which_irq) {
     return interrupt_handle;
 }
 
-mx_handle_t sys_pci_map_config(mx_handle_t handle) {
+mx_status_t sys_pci_map_config(mx_handle_t handle, mx_handle_t* out_handle) {
     /**
      * Fetch an I/O Mapping object which maps the PCI device's mmaped config
      * into the caller's address space (read only)
@@ -493,9 +507,12 @@ mx_handle_t sys_pci_map_config(mx_handle_t handle) {
     if (!config_handle)
         return ERR_NO_MEMORY;
 
-    mx_handle_t ret_val = up->MapHandleToValue(config_handle);
+    if (make_user_ptr(out_handle).copy_to_user(up->MapHandleToValue(config_handle)) != NO_ERROR) {
+        return ERR_INVALID_ARGS;
+    }
     up->AddHandle(mxtl::move(config_handle));
-    return ret_val;
+
+    return NO_ERROR;
 }
 
 /**
@@ -605,4 +622,4 @@ mx_status_t sys_pci_query_irq_mode_caps(mx_handle_t, uint32_t, uint32_t*) {
 mx_status_t sys_pci_set_irq_mode(mx_handle_t, uint32_t, uint32_t) {
     return ERR_NOT_SUPPORTED;
 }
-#endif  // WITH_DEV_PCIE
+#endif // WITH_DEV_PCIE

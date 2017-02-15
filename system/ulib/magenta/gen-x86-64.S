@@ -92,11 +92,11 @@ m_syscall 1 mx_pci_claim_device 92
 m_syscall 2 mx_pci_enable_bus_master 93
 m_syscall 2 mx_pci_enable_pio 94
 m_syscall 1 mx_pci_reset_device 95
-m_syscall 3 mx_pci_map_mmio 96
+m_syscall 4 mx_pci_map_mmio 96
 m_syscall 5 mx_pci_io_write 97
 m_syscall 5 mx_pci_io_read 98
-m_syscall 2 mx_pci_map_interrupt 99
-m_syscall 1 mx_pci_map_config 100
+m_syscall 3 mx_pci_map_interrupt 99
+m_syscall 2 mx_pci_map_config 100
 m_syscall 3 mx_pci_query_irq_mode_caps 101
 m_syscall 3 mx_pci_set_irq_mode 102
 m_syscall 3 mx_pci_init 103
