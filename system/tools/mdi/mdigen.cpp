@@ -20,7 +20,8 @@
 
 #define PRINT_PARSE_TREE 1
 
-static int run(std::vector<std::string>& in_paths, const char* out_path) {
+static int run(std::vector<std::string>& in_paths, const char* out_path,
+               const char* out_header_path) {
     std::ofstream out_file;
     out_file.open(out_path, std::ofstream::binary);
     if (!out_file.good()) {
@@ -74,6 +75,16 @@ static int run(std::vector<std::string>& in_paths, const char* out_path) {
     root.compute_node_length();
     root.serialize(out_file);
 
+    if (out_header_path) {
+        std::ofstream out_file;
+        out_file.open(out_header_path, std::ofstream::binary);
+        if (!out_file.good()) {
+            fprintf(stderr, "error: unable to open %s\n", out_header_path);
+            return -1;
+        }
+        print_header_file(out_file);
+    }
+
 #if PRINT_PARSE_TREE
     root.print(0);
 #endif
@@ -84,6 +95,7 @@ static int run(std::vector<std::string>& in_paths, const char* out_path) {
 int main(int argc, char* argv[]) {
     std::vector<std::string> in_paths;
     const char* out_path = nullptr;
+    const char* out_header_path = nullptr;
  
     argc--;
     argv++;
@@ -92,15 +104,20 @@ int main(int argc, char* argv[]) {
         const char *arg = argv[0];
         if (arg[0] != '-') {
             in_paths.push_back(arg);
-        } else if (!strcmp(arg, "-o")) {
-            if (argc < 2) {
-              fprintf(stderr, "no output file given\n");
-              return -1;
-            } else if (out_path) {
+        } else if (!strcmp(arg, "-o") && argc >= 2) {
+            if (out_path) {
                 fprintf(stderr, "duplicate output file\n");
                 return 1;
             }
             out_path = argv[1];
+            argc--;
+            argv++;
+        } else if (!strcmp(arg, "-h") && argc >= 2) {
+            if (out_header_path) {
+                fprintf(stderr, "duplicate header output file\n");
+                return 1;
+            }
+            out_header_path = argv[1];
             argc--;
             argv++;
         } else {
@@ -120,5 +137,5 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    return run(in_paths, out_path);
+    return run(in_paths, out_path, out_header_path);
 }

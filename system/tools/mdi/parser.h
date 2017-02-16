@@ -34,3 +34,4 @@ struct Node {
 
 int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type);
 int parse_node(Tokenizer& tokenizer, Token& token, Node& parent);
+int print_header_file(std::ofstream& out_file);

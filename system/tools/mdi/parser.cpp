@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <ctime>
 #include <map>
 
 #include "parser.h"
@@ -16,7 +17,7 @@
 static std::map<std::string, mdi_id_t> id_map;
 
 // map of ID numbers to identifier names
-static std::map<uint64_t, std::string> id_name_map;
+static std::map<uint32_t, std::string> id_name_map;
 
 // map of child types for arrays
 static std::map<mdi_id_t, mdi_type_t> array_type_map;
@@ -532,4 +533,28 @@ int parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
             fprintf(stderr, "Internal error: Unknown type %d\n", MDI_ID_TYPE(id));
             return -1;
     }
+}
+
+constexpr char kAuthors[] = "The Fuchsia Authors";
+
+bool generate_file_header(std::ofstream& os) {
+    auto t = std::time(nullptr);
+    auto ltime = std::localtime(&t);
+
+    os << "// Copyright " << ltime->tm_year + 1900
+       << " " << kAuthors << ". All rights reserved.\n";
+    os << "// This is a GENERATED file. The license governing this file can be ";
+    os << "found in the LICENSE file.\n\n";
+    return os.good();
+}
+
+int print_header_file(std::ofstream& os) {
+    generate_file_header(os);
+    for (auto iter = id_map.begin(); iter != id_map.end(); iter++) {
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "#define %-50s 0x%08X\n", iter->first.c_str(), iter->second);
+        os << buffer;
+    }
+
+    return 0;
 }

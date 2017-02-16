@@ -5,12 +5,13 @@
 # https://opensource.org/licenses/MIT
 
 MDI_BIN := $(BUILDDIR)/mdi.bin
+MDI_HEADER := $(BUILDDIR)/gen-mdi.h
 MDIGEN := $(BUILDDIR)/tools/mdigen
 
 $(MDI_BIN): $(MDIGEN) $(MDI_SRCS)
 	@echo generating $@
 	@$(MKDIR)
-	$(NOECHO)$(MDIGEN) -o $@ $(MDI_SRCS)
+	$(NOECHO)$(MDIGEN) -o $@ $(MDI_SRCS) -h $(MDI_HEADER)
 
 GENERATED += $(MDI_BIN)
 EXTRA_BUILDDEPS += $(MDI_BIN)
