@@ -77,7 +77,7 @@ void Node::print(int depth) {
             printf("%" PRIu64, node.value.u64);
             break;
         case MDI_BOOLEAN:
-            printf("%s", (node.value.b ? "true" : "false"));
+            printf("%s", (node.value.u8 ? "true" : "false"));
             break;  
         case MDI_STRING:
             printf("%s", string_value.c_str());
@@ -338,9 +338,9 @@ static int parse_boolean_node(Token& token, mdi_id_t id, Node& parent) {
     Node node(id);
 
     if (token.type == TOKEN_TRUE) {
-        node.node.value.b = true;
+        node.node.value.u8 = true;
     } else if (token.type == TOKEN_FALSE) {
-        node.node.value.b = false;
+        node.node.value.u8 = false;
     } else {
         fprintf(stderr, "Expected boolean value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
