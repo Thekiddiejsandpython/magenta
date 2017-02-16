@@ -11,8 +11,13 @@ MDIGEN_CFLAGS := -Isystem/public
 
 TOOLS := $(MDIGEN)
 
-$(MDIGEN): $(LOCAL_DIR)/mdigen.cpp $(LOCAL_DIR)/tokens.cpp
-	@echo compiling $@
+SRC := \
+    $(LOCAL_DIR)/mdigen.cpp \
+    $(LOCAL_DIR)/parser.cpp \
+    $(LOCAL_DIR)/tokens.cpp \
+
+$(MDIGEN): $(SRC)
+	@echo compiling $^
 	@$(MKDIR)
 	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $^
 

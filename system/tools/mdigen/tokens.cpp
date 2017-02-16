@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <string.h>
+#include <stdio.h>
 
 #include "tokens.h"
 
