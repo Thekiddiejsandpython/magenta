@@ -25,11 +25,8 @@ const char* get_id_name(mdi_id_t id) {
     return id_name_map[id & MDI_MAX_ID].c_str();
 }
 
-Node::Node(mdi_id_t id) {
-    memset(&node, 0, sizeof(node));
-    node.id = id;
-    static_assert(sizeof(node) == MDI_ALIGN(sizeof(node)), "");
-    node.length = sizeof(node);
+Node::Node(mdi_id_t i)
+    : id(i) {
 }
 
 void Node::print_indent(int depth) {
@@ -45,40 +42,32 @@ void Node::print_children(int depth) {
 }
 
 void Node::print(int depth) {
-    const char* name = get_id_name(node.id);
+    const char* name = get_id_name(id);
 
     if (name && name[0]) {
         print_indent(depth);
         printf("%s = ", name);
     }
 
-    switch (MDI_ID_TYPE(node.id)) {
+    switch (MDI_ID_TYPE(id)) {
         case MDI_INT8:
-            printf("%d", node.value.i8);
+        case MDI_INT16:
+        case MDI_INT32:
+            printf("%d", (int)int_value);
             break;
         case MDI_UINT8:
-            printf("%u", node.value.u8);
-            break;
-        case MDI_INT16:
-            printf("%d", node.value.i16);
-            break;
         case MDI_UINT16:
-            printf("%u", node.value.u16);
-            break;
-        case MDI_INT32:
-            printf("%d", node.value.i32);
-            break;
         case MDI_UINT32:
-            printf("%u", node.value.u32);
-            break;
-        case MDI_INT64:
-            printf("%" PRId64, node.value.i64);
+            printf("%u", (unsigned int)int_value);
+            break;         
+         case MDI_INT64:
+            printf("%" PRId64, (int64_t)int_value);
             break;
         case MDI_UINT64:
-            printf("%" PRIu64, node.value.u64);
+            printf("%" PRIu64, int_value);
             break;
         case MDI_BOOLEAN:
-            printf("%s", (node.value.u8 ? "true" : "false"));
+            printf("%s", (int_value ? "true" : "false"));
             break;  
         case MDI_STRING:
             printf("%s", string_value.c_str());
@@ -107,11 +96,87 @@ void Node::print(int depth) {
     }
 }
 
+void Node::compute_node_length() {
+    switch (MDI_ID_TYPE(id)) {
+        case MDI_INT8:
+        case MDI_UINT8:
+        case MDI_INT16:
+        case MDI_UINT16:
+        case MDI_INT32:
+        case MDI_UINT32:
+         case MDI_INT64:
+        case MDI_UINT64:
+        case MDI_BOOLEAN:
+            // primitive types are self contained
+            length = sizeof(mdi_node_t);
+            break;
+        case MDI_STRING:
+            // zero terminated string follows the mdi_node_t
+            length = MDI_ALIGN(sizeof(mdi_node_t) + string_value.length() + 1);
+            break;  
+        case MDI_ARRAY:
+        case MDI_LIST:
+            length = sizeof(mdi_node_t);
+            // recurse through our children
+            for (auto iter = children.begin(); iter != children.end(); iter++) {
+                iter->compute_node_length();
+                length += iter->length;
+            }
+            break;
+        case MDI_INVALID_TYPE:
+        default:
+            printf("invalid type %d\n", MDI_ID_TYPE(id));
+            assert(0);
+            break;
+    }
+}
+
 int Node::serialize(std::ofstream& out_file) {
+    mdi_node_t node;
+    static_assert(sizeof(node) == MDI_ALIGN(sizeof(node)), "");
+
+    memset(&node, 0, sizeof(node));
+    node.id = id;
+    node.length = length;
+
+    switch (MDI_ID_TYPE(id)) {
+        case MDI_INT8:
+        case MDI_UINT8:
+            node.value.u8 = (uint8_t)int_value;
+            break;
+        case MDI_INT16:
+        case MDI_UINT16:
+            node.value.u16 = (uint16_t)int_value;
+            break;
+        case MDI_INT32:
+        case MDI_UINT32:
+            node.value.u32 = (uint32_t)int_value;
+            break;
+        case MDI_INT64:
+        case MDI_UINT64:
+            node.value.u64 = int_value;
+            break;
+        case MDI_BOOLEAN:
+            node.value.u8 = bool_value;
+            break;
+        case MDI_STRING:
+        case MDI_ARRAY:
+            node.value.array.type = array_element_type;
+            node.value.array.count = children.size();
+            break;
+        case MDI_LIST:
+            node.value.list_count = children.size();
+            break;
+        case MDI_INVALID_TYPE:
+        default:
+            assert(0);
+            break;
+    }
+
     out_file.write((const char *)&node, sizeof(node));
 
     // string values written immediately after the mdi_node_t
-    if (MDI_ID_TYPE(node.id) == MDI_STRING) {
+    if (MDI_ID_TYPE(id) == MDI_STRING) {
         out_file.write(string_value.c_str(), string_value.length() + 1);
 
         // align to MDI_ALIGNMENT boundary
@@ -261,53 +326,37 @@ static int parse_int_node(Token& token, mdi_id_t id, Node& parent) {
     Node node(id);
     mdi_type_t type = MDI_ID_TYPE(id);
 
-    if (type == MDI_UINT64) {
-        node.node.value.u64 = token.int_value;
-    } else if (type == MDI_INT64) {
-        uint64_t value = token.int_value;
-        if (value > INT64_MAX || -value < INT64_MIN) goto out_of_range;
-        if (token.type == TOKEN_NEG_INT_LITERAL) {
-            node.node.value.i64 = -value;
-        } else {
-            node.node.value.i64 = value;
-        }
-    } else {
-        // signed version of our value
-        int64_t value = (int64_t)token.int_value;
-        if (token.type == TOKEN_NEG_INT_LITERAL) {
-            value = -value;
-        }
+    // signed version of our value
+    int64_t value = (int64_t)token.int_value;
 
-        switch (type) {
-            case MDI_INT8:
-                if (value > INT8_MAX || value < INT8_MIN) goto out_of_range;
-                node.node.value.i8 = (int8_t)value;
-                break;
-            case MDI_UINT8:
-                if (value > UINT8_MAX || value < 0) goto out_of_range;
-                node.node.value.u8 = (uint8_t)value;
-                break;
-            case MDI_INT16:
-                if (value > INT16_MAX || value < INT16_MIN) goto out_of_range;
-                node.node.value.i16 = (int16_t)value;
-                break;
-            case MDI_UINT16:
-                if (value > UINT16_MAX || value < 0) goto out_of_range;
-                node.node.value.u16 = (uint16_t)value;
-                break;
-            case MDI_INT32:
-                if (value > INT32_MAX || value < INT32_MIN) goto out_of_range;
-                node.node.value.i32 = (int32_t)value;
-                break;
-            case MDI_UINT32:
-                if (value > UINT32_MAX || value < 0) goto out_of_range;
-                node.node.value.u32 = (uint32_t)value;
-                break;
-            default:
-                assert(0);
-                return -1;
-        }
-    }
+    switch (type) {
+        case MDI_INT8:
+            if (value > INT8_MAX || value < INT8_MIN) goto out_of_range;
+            break;
+        case MDI_UINT8:
+            if (value > UINT8_MAX || value < 0) goto out_of_range;
+            break;
+        case MDI_INT16:
+            if (value > INT16_MAX || value < INT16_MIN) goto out_of_range;
+            break;
+        case MDI_UINT16:
+            if (value > UINT16_MAX || value < 0) goto out_of_range;
+            break;
+        case MDI_INT32:
+            if (value > INT32_MAX || value < INT32_MIN) goto out_of_range;
+            break;
+        case MDI_UINT32:
+            if (value > UINT32_MAX || value < 0) goto out_of_range;
+            break;
+        case MDI_INT64:
+            if (value > INT64_MAX || -value < INT64_MIN) goto out_of_range;
+        case MDI_UINT64:
+        break;
+        default:
+            assert(0);
+            return -1;
+    }    
+    node.int_value = token.int_value;
 
     parent.children.push_back(node);
     return 0;
@@ -328,8 +377,6 @@ static int parse_string_node(Token& token, mdi_id_t id, Node& parent) {
 
     Node node(id);
     node.string_value = token.string_value;
-    // room for zero terminated string following the mdi_node_t
-    node.node.length = MDI_ALIGN(sizeof(node.node) + node.string_value.length() + 1);
     parent.children.push_back(node);
 
     return 0;
@@ -339,9 +386,9 @@ static int parse_boolean_node(Token& token, mdi_id_t id, Node& parent) {
     Node node(id);
 
     if (token.type == TOKEN_TRUE) {
-        node.node.value.u8 = true;
+        node.bool_value = true;
     } else if (token.type == TOKEN_FALSE) {
-        node.node.value.u8 = false;
+        node.bool_value = false;
     } else {
         fprintf(stderr, "Expected boolean value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
@@ -377,14 +424,6 @@ static int parse_list_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node
             return -1;
         }
     }
-
-    // compute our total size
-    uint32_t children_length = 0;
-    for (auto iter = node.children.begin(); iter != node.children.end(); iter++) {
-        children_length += iter->node.length;
-    }
-    node.node.length = MDI_ALIGN(sizeof(node.node) + children_length);
-    node.node.value.list_count = node.children.size();
 
     parent.children.push_back(node);
     return 0;
@@ -436,15 +475,6 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
                 break;
         }
     }
-
-    // compute our total size
-    uint32_t children_length = 0;
-    for (auto iter = node.children.begin(); iter != node.children.end(); iter++) {
-        children_length += iter->node.length;
-    }
-    node.node.length = MDI_ALIGN(sizeof(node.node) + children_length);
-    node.node.value.array.type = element_type;
-    node.node.value.array.count = node.children.size();
 
     parent.children.push_back(node);
     return 0;

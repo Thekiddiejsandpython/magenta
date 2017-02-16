@@ -71,11 +71,12 @@ static int run(std::vector<std::string>& in_paths, const char* out_path) {
         }
     }
 
+    root.compute_node_length();
+    root.serialize(out_file);
+
 #if PRINT_PARSE_TREE
     root.print(0);
 #endif
-
-    root.serialize(out_file);
 
     return 0;
 }

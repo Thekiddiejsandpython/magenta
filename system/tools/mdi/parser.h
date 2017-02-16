@@ -13,8 +13,12 @@
 #include "tokens.h"
 
 struct Node {
-    mdi_node_t  node;
+    mdi_id_t id;
+    uint64_t int_value;
+    bool bool_value;
     std::string string_value;
+    mdi_type_t array_element_type;
+    uint32_t length;
     std::vector<Node> children;
 
     Node(mdi_id_t id);
@@ -22,6 +26,8 @@ struct Node {
     void print_indent(int depth);
     void print_children(int depth);
     void print(int depth);
+
+    void compute_node_length();
 
     int serialize(std::ofstream& out_file);
 };
