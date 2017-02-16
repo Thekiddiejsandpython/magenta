@@ -13,7 +13,7 @@ $(MDI_BIN): $(MDIGEN) $(MDI_SRCS)
 	$(NOECHO)$(MDIGEN) -o $@ $(MDI_SRCS)
 
 GENERATED += $(MDI_BIN)
-#EXTRA_BUILDDEPS += $(MDI_BIN) 
+EXTRA_BUILDDEPS += $(MDI_BIN)
 
-#.PHONY: mdibin
-#mdibin: $(MDI_BIN)
+.PHONY: mdibin
+mdibin: $(MDI_BIN)

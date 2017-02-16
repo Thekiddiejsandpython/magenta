@@ -1,0 +1,6 @@
+boolean foo 1
+string faa 2
+list blee 3
+list rrrr 4
+array[uint32] bleeker 5
+array[boolean] bool_array 6

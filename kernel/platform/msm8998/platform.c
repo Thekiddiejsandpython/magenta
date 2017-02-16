@@ -19,6 +19,7 @@
 #include <dev/display.h>
 #include <dev/hw_rng.h>
 #include <dev/psci.h>
+#include <lib/mdi.h>
 
 #include <platform.h>
 #include <dev/interrupt.h>
@@ -159,6 +160,8 @@ void platform_early_init(void)
 #if FASTBOOT_HEADER
     find_command_line();
 #endif
+
+    mdi_init();
 
     uart_init_early();
 
