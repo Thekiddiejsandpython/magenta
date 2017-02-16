@@ -18,9 +18,7 @@
 #include "parser.h"
 #include "tokens.h"
 
-//#define PRINT_TOKENS            1
-//#define PRINT_ID_DECLARATIONS   1
-#define PRINT_PARSE_TREE        1
+#define PRINT_PARSE_TREE 1
 
 static int run(std::vector<std::string>& in_paths, const char* out_path) {
     std::ofstream out_file;

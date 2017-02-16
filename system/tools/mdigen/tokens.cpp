@@ -7,6 +7,8 @@
 
 #include "tokens.h"
 
+//#define PRINT_TOKENS 1
+
 struct ReservedWord {
     TokenType   token;
     const char* word;
