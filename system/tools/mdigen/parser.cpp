@@ -27,6 +27,7 @@ const char* get_id_name(mdi_id_t id) {
 
 Node::Node(mdi_id_t id) {
     node.id = id;
+    node.length = MDI_ALIGN(sizeof(node));
 }
 
 void Node::print_indent(int depth) {
@@ -301,6 +302,8 @@ static int parse_string_node(Token& token, mdi_id_t id, Node& parent) {
 
     Node node(id);
     node.string_value = token.string_value;
+    // room for zero terminated string following the mdi_node_t
+    node.node.length = MDI_ALIGN(sizeof(node.node) + node.string_value.length() + 1);
     parent.children.push_back(node);
 
     return 0;
@@ -348,6 +351,13 @@ static int parse_list_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node
             return -1;
         }
     }
+
+    // compute our total size
+    uint32_t children_length = 0;
+    for (auto iter = node.children.begin(); iter != node.children.end(); iter++) {
+        children_length += iter->node.length;
+    }
+    node.node.length = MDI_ALIGN(sizeof(node.node) + children_length);
 
     parent.children.push_back(node);
     return 0;
@@ -399,6 +409,13 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
                 break;
         }
     }
+
+    // compute our total size
+    uint32_t children_length = 0;
+    for (auto iter = node.children.begin(); iter != node.children.end(); iter++) {
+        children_length += iter->node.length;
+    }
+    node.node.length = MDI_ALIGN(sizeof(node.node) + children_length);
 
     parent.children.push_back(node);
     return 0;
