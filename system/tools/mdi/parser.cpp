@@ -160,6 +160,8 @@ int Node::serialize(std::ofstream& out_file) {
             node.value.u8 = bool_value;
             break;
         case MDI_STRING:
+            node.value.str_len = string_value.length() + 1;
+            break;
         case MDI_ARRAY:
             node.value.array.type = array_element_type;
             node.value.array.count = children.size();
@@ -177,10 +179,12 @@ int Node::serialize(std::ofstream& out_file) {
 
     // string values written immediately after the mdi_node_t
     if (MDI_ID_TYPE(id) == MDI_STRING) {
-        out_file.write(string_value.c_str(), string_value.length() + 1);
+        int length = string_value.length() + 1;
+        out_file.write(string_value.c_str(), length);
 
         // align to MDI_ALIGNMENT boundary
-        int pad = MDI_ALIGN(node.length) - node.length;
+        length += sizeof(node);
+        int pad = MDI_ALIGN(length) - length;
         if (pad) {
             char zeros[MDI_ALIGNMENT] = { 0 };
             out_file.write(zeros, pad);
