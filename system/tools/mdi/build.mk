@@ -17,10 +17,15 @@ SRC := \
     $(LOCAL_DIR)/parser.cpp \
     $(LOCAL_DIR)/tokens.cpp \
 
-$(MDIGEN): $(SRC)
+HEADERS := \
+    $(LOCAL_DIR)/parser.h \
+    $(LOCAL_DIR)/tokens.h \
+    system/public/magenta/mdi.h \
+
+$(MDIGEN): $(SRC) $(HEADERS)
 	@echo compiling $@
 	@$(MKDIR)
-	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $^
+	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $(SRC)
 
 $(MDIDUMP): $(LOCAL_DIR)/mdidump.cpp
 	@echo compiling $@
