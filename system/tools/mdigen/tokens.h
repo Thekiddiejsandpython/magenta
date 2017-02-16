@@ -22,8 +22,6 @@ enum TokenType {
     TOKEN_LIST_END,         // '{'
     TOKEN_ARRAY_START,      // '['
     TOKEN_ARRAY_END,        // ']'
-    TOKEN_RANGE_START,      // '('
-    TOKEN_RANGE_END,        // ')'
     TOKEN_CHILD_SEPARATOR,  // ','
     TOKEN_EQUALS,           // '='
 
@@ -39,8 +37,6 @@ enum TokenType {
     TOKEN_BOOLEAN_TYPE,     // "boolean"
     TOKEN_STRING_TYPE,      // "string"
     TOKEN_ARRAY_TYPE,       // "array"
-    TOKEN_RANGE32_TYPE,     // "range32"
-    TOKEN_RANGE64_TYPE,     // "range64"
     TOKEN_LIST_TYPE,        // "list"
 
     // special values

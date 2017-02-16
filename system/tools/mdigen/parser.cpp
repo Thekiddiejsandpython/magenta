@@ -91,12 +91,6 @@ void Node::print(int depth) {
             print_indent(depth);
             printf("}");
             break;
-        case MDI_RANGE32:
-            printf("MDI_RANGE32\n");
-            break;
-        case MDI_RANGE64:
-            printf("MDI_RANGE64\n");
-            break;
         case MDI_INVALID_TYPE:
             assert(0);
             break;
@@ -410,16 +404,6 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
     return 0;
 }
 
-static int parse_range_node(Token& token, mdi_id_t id, Node& parent) {
-    if (token.type != TOKEN_RANGE_START) {
-        fprintf(stderr, "Expected range value for node \"%s\", got \"%s\"\n", get_id_name(id),
-                token.string_value.c_str());
-        return -1;
-    }
-
-    return 0;
-}
-
 int parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
     auto iter = id_map.find(token.string_value);
     if (iter == id_map.end()) {
@@ -464,9 +448,6 @@ int parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
             return parse_string_node(value, id, parent);
         case MDI_ARRAY:
             return parse_array_node(tokenizer, value, id, parent);
-        case MDI_RANGE32:
-        case MDI_RANGE64:
-            return parse_range_node(value, id, parent);
         default:
             fprintf(stderr, "Internal error: Unknown type %d\n", MDI_ID_TYPE(id));
             return -1;

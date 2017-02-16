@@ -24,8 +24,6 @@ typedef enum {
     MDI_BOOLEAN,    // boolean type
     MDI_STRING,     // zero terminated char string
     MDI_ARRAY,      // list of children with same type
-    MDI_RANGE32,    // pair of unsigned 32-bit base and length
-    MDI_RANGE64,    // pair of unsigned 64-bit base and length
 } mdi_type_t;
 
 // MDI node identifier

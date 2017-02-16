@@ -24,8 +24,6 @@ struct ReservedWord {
     { TOKEN_BOOLEAN_TYPE,   "boolean" },
     { TOKEN_STRING_TYPE,    "string" },
     { TOKEN_ARRAY_TYPE,     "array" },
-    { TOKEN_RANGE32_TYPE,   "range32" },
-    { TOKEN_RANGE64_TYPE,   "range64" },
     { TOKEN_LIST_TYPE,      "list" },
     { TOKEN_TRUE,           "true" },
     { TOKEN_FALSE,          "false" },
@@ -69,10 +67,6 @@ mdi_type_t Token::get_type_name() {
             return MDI_STRING;
         case TOKEN_ARRAY_TYPE:
             return MDI_ARRAY;
-        case TOKEN_RANGE32_TYPE:
-            return MDI_RANGE32;
-        case TOKEN_RANGE64_TYPE:
-            return MDI_RANGE64;
         case TOKEN_LIST_TYPE:
             return MDI_LIST;
         default:
@@ -112,12 +106,6 @@ void Token::print() {
         case TOKEN_ARRAY_END:
             printf("TOKEN_ARRAY_END\n");
             break;
-        case TOKEN_RANGE_START:
-            printf("TOKEN_RANGE_START\n");
-            break;
-        case TOKEN_RANGE_END:
-            printf("TOKEN_RANGE_END\n");
-            break;
         case TOKEN_EQUALS:
             printf("TOKEN_EQUALS\n");
             break;
@@ -153,12 +141,6 @@ void Token::print() {
             break;
         case TOKEN_ARRAY_TYPE:
             printf("TOKEN_ARRAY_TYPE\n");
-            break;
-        case TOKEN_RANGE32_TYPE:
-            printf("TOKEN_RANGE32_TYPE\n");
-            break;
-        case TOKEN_RANGE64_TYPE:
-            printf("TOKEN_RANGE64_TYPE\n");
             break;
         case TOKEN_LIST_TYPE:
             printf("TOKEN_LIST_TYPE\n");
@@ -423,12 +405,6 @@ bool Tokenizer::next_token(Token& token) {
                 break;
             case ']':
                 token.type = TOKEN_ARRAY_END;
-                break;
-            case '(':
-                token.type = TOKEN_RANGE_START;
-                break;
-            case ')':
-                token.type = TOKEN_RANGE_END;
                 break;
             case '=':
                 token.type = TOKEN_EQUALS;
