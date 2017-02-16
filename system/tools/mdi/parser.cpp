@@ -132,7 +132,7 @@ void Node::compute_node_length() {
     }
 }
 
-int Node::serialize(std::ofstream& out_file) {
+bool Node::serialize(std::ofstream& out_file) {
     mdi_node_t node;
     static_assert(sizeof(node) == MDI_ALIGN(sizeof(node)), "");
 
@@ -173,7 +173,7 @@ int Node::serialize(std::ofstream& out_file) {
         case MDI_INVALID_TYPE:
         default:
             assert(0);
-            break;
+            return false;
     }
 
     out_file.write((const char *)&node, sizeof(node));
@@ -197,33 +197,33 @@ int Node::serialize(std::ofstream& out_file) {
     }
 
 // TODO - error handling
-    return 0;
+    return true;
 }
 
 
-int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
+bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
     mdi_type_t child_type = MDI_INVALID_TYPE;
 
     if (type == MDI_ARRAY) {
         // array declarations are followed by child type
         Token token;
         if (!tokenizer.next_token(token)) {
-            return -1;
+            return false;
         }
         if (token.type == TOKEN_EOF) {
             fprintf(stderr, "end of file while parsing ID declaration\n");
-            return -1;
+            return false;
         }
         if (token.type != TOKEN_ARRAY_START) {
             fprintf(stderr, "expected \'[' after \"array\"\n");
-            return -1;
+            return false;
         }
         if (!tokenizer.next_token(token)) {
-            return -1;
+            return false;
         }
         if (token.type == TOKEN_EOF) {
             fprintf(stderr, "end of file while parsing ID declaration\n");
-            return -1;
+            return false;
         }
 
         child_type = token.get_type_name();
@@ -243,56 +243,56 @@ int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
                 fprintf(stderr, "Unsupported array child type \"%s\". "
                         "Only integer and boolean types are currently supported\n",
                         token.string_value.c_str());
-                return -1;
+                return false;
         }
 
         if (!tokenizer.next_token(token)) {
-            return -1;
+            return false;
         }
         if (token.type == TOKEN_EOF) {
             fprintf(stderr, "end of file while parsing ID declaration\n");
-            return -1;
+            return false;
         }
         if (token.type != TOKEN_ARRAY_END) {
             fprintf(stderr, "expected \'[' after array child type\n");
-            return -1;
+            return false;
         }
     }
 
     Token name_token, number_token;
 
     if (!tokenizer.next_token(name_token)) {
-        return -1;
+        return false;
     }
     if (name_token.type == TOKEN_EOF) {
         fprintf(stderr, "end of file while parsing ID declaration\n");
-        return -1;
+        return false;
     }
 
     if (!tokenizer.next_token(number_token)) {
-        return -1;
+        return false;
     }
     if (number_token.type == TOKEN_EOF) {
         fprintf(stderr, "end of file while parsing ID declaration\n");
-        return -1;
+        return false;
     }
 
     if (name_token.type != TOKEN_IDENTIFIER) {
         fprintf(stderr, "expected identifier, got token \"%s\" in ID declaration\n",
                 name_token.string_value.c_str());
-        return -1;
+        return false;
     }
     const char* name = name_token.string_value.c_str();
 
     if (number_token.type != TOKEN_INT_LITERAL) {
         fprintf(stderr, "expected integer, got token \"%s\" in ID declaration for \"%s\"\n",
                 number_token.string_value.c_str(), name);
-        return -1;
+        return false;
     }
 
     if (id_map.find(name) != id_map.end()) {
         fprintf(stderr, "Duplicate declaration for ID %s\n", name);
-        return -1;
+        return false;
     }
 
     if (number_token.int_value < 1 || number_token.int_value > MDI_MAX_ID) {
@@ -304,7 +304,7 @@ int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
     if (duplicate != id_name_map.end()) {
         fprintf(stderr, "ID number %" PRId64 " has already been assigned to ID %s\n",
                 id_number, duplicate->second.c_str());
-        return -1;
+        return false;
     }
 
     mdi_id_t id = MDI_ID(type, id_number);
@@ -318,14 +318,14 @@ int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
 #if PRINT_ID_DECLARATIONS
     printf("ID %s : %08X\n", name, id);
 #endif
-    return 0;
+    return true;
 }
 
-static int parse_int_node(Token& token, mdi_id_t id, Node& parent) {
+static bool parse_int_node(Token& token, mdi_id_t id, Node& parent) {
     if (token.type != TOKEN_INT_LITERAL && token.type != TOKEN_NEG_INT_LITERAL) {
         fprintf(stderr, "Expected integer value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
-        return -1;
+        return false;
     }
 
     Node node(id);
@@ -359,35 +359,35 @@ static int parse_int_node(Token& token, mdi_id_t id, Node& parent) {
         break;
         default:
             assert(0);
-            return -1;
+            return false;
     }    
     node.int_value = token.int_value;
 
     parent.children.push_back(node);
-    return 0;
+    return true;
 
 out_of_range:
     fprintf(stderr, "Integer value %s%" PRId64 " out of range for \"%s\"\n",
             (token.type == TOKEN_NEG_INT_LITERAL ? "-" : ""),
             token.int_value, get_id_name(id));
-    return -1;
+    return false;
 }
 
-static int parse_string_node(Token& token, mdi_id_t id, Node& parent) {
+static bool parse_string_node(Token& token, mdi_id_t id, Node& parent) {
      if (token.type != TOKEN_STRING_LITERAL) {
         fprintf(stderr, "Expected string value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
-        return -1;
+        return false;
     }
 
     Node node(id);
     node.string_value = token.string_value;
     parent.children.push_back(node);
 
-    return 0;
+    return true;
 }
 
-static int parse_boolean_node(Token& token, mdi_id_t id, Node& parent) {
+static bool parse_boolean_node(Token& token, mdi_id_t id, Node& parent) {
     Node node(id);
 
     if (token.type == TOKEN_TRUE) {
@@ -397,18 +397,18 @@ static int parse_boolean_node(Token& token, mdi_id_t id, Node& parent) {
     } else {
         fprintf(stderr, "Expected boolean value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
-        return -1;
+        return false;
     }
 
     parent.children.push_back(node);
-    return 0;
+    return true;
 }
 
-static int parse_list_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node& parent) {
+static bool parse_list_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node& parent) {
     if (token.type != TOKEN_LIST_START) {
         fprintf(stderr, "Expected list value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
-        return -1;
+        return false;
     }
      
     Node node(id);
@@ -416,29 +416,29 @@ static int parse_list_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node
     while (1) {
         Token token;
         if (!tokenizer.next_token(token)) {
-            return -1;
+            return false;
         }
         if (token.type == TOKEN_EOF) {
             fprintf(stderr, "end of file while parsing list children\n");
-            return -1;
+            return false;
         } else if (token.type == TOKEN_LIST_END) {
             break;
         }
 
-        if (parse_node(tokenizer, token, node)) {
-            return -1;
+        if (!parse_node(tokenizer, token, node)) {
+            return false;
         }
     }
 
     parent.children.push_back(node);
-    return 0;
+    return true;
 }
 
-static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node& parent) {
+static bool parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node& parent) {
     if (token.type != TOKEN_ARRAY_START) {
         fprintf(stderr, "Expected array value for node \"%s\", got \"%s\"\n", get_id_name(id),
                 token.string_value.c_str());
-        return -1;
+        return false;
     }
     mdi_type_t element_type = array_type_map[id];
     mdi_id_t element_id = MDI_ID(element_type, 0);
@@ -448,11 +448,11 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
     while (1) {
         Token token;
         if (!tokenizer.next_token(token)) {
-            return -1;
+            return false;
         }
         if (token.type == TOKEN_EOF) {
             fprintf(stderr, "end of file while parsing list children\n");
-            return -1;
+            return false;
         } else if (token.type == TOKEN_ARRAY_END) {
             break;
         }
@@ -466,13 +466,13 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
             case MDI_UINT32:
             case MDI_INT64:
             case MDI_UINT64:
-                if (parse_int_node(token, element_id, node)) {
-                    return -1;
+                if (!parse_int_node(token, element_id, node)) {
+                    return false;
                 }
                 break;
             case MDI_BOOLEAN:
-                if (parse_boolean_node(token, element_id, node)) {
-                    return -1;
+                if (!parse_boolean_node(token, element_id, node)) {
+                    return false;
                 }
                 break;
             default:
@@ -482,33 +482,33 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
     }
 
     parent.children.push_back(node);
-    return 0;
+    return true;
 }
 
-int parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
+bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
     auto iter = id_map.find(token.string_value);
     if (iter == id_map.end()) {
         fprintf(stderr, "undefined identifier \"%s\"\n", token.string_value.c_str());
-        return -1;
+        return false;
     }
     mdi_id_t id = iter->second;
 
     Token equals_token;
     if (!tokenizer.next_token(equals_token)) {
-        return -1;
+        return false;
     }
     if (equals_token.type != TOKEN_EQUALS) {
         fprintf(stderr, "Expected \'=\' after identifier %s\n", token.string_value.c_str());
-        return -1;
+        return false;
     }
 
     Token value;
     if (!tokenizer.next_token(value)) {
-        return -1;
+        return false;
     }
     if (value.type == TOKEN_EOF) {
         fprintf(stderr, "end of file while parsing node\n");
-        return -1;
+        return false;
     }
 
     switch (MDI_ID_TYPE(id)) {
@@ -531,7 +531,7 @@ int parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
             return parse_array_node(tokenizer, value, id, parent);
         default:
             fprintf(stderr, "Internal error: Unknown type %d\n", MDI_ID_TYPE(id));
-            return -1;
+            return false;
     }
 }
 
@@ -548,7 +548,7 @@ bool generate_file_header(std::ofstream& os) {
     return os.good();
 }
 
-int print_header_file(std::ofstream& os) {
+bool print_header_file(std::ofstream& os) {
     generate_file_header(os);
     for (auto iter = id_map.begin(); iter != id_map.end(); iter++) {
         char buffer[256];
@@ -556,5 +556,5 @@ int print_header_file(std::ofstream& os) {
         os << buffer;
     }
 
-    return 0;
+    return true;
 }

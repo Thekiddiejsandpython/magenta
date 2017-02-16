@@ -29,9 +29,9 @@ struct Node {
 
     void compute_node_length();
 
-    int serialize(std::ofstream& out_file);
+    bool serialize(std::ofstream& out_file);
 };
 
-int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type);
-int parse_node(Tokenizer& tokenizer, Token& token, Node& parent);
-int print_header_file(std::ofstream& out_file);
+bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type);
+bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent);
+bool print_header_file(std::ofstream& out_file);

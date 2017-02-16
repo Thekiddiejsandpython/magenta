@@ -20,13 +20,13 @@
 
 #define PRINT_PARSE_TREE 1
 
-static int run(std::vector<std::string>& in_paths, const char* out_path,
+static bool run(std::vector<std::string>& in_paths, const char* out_path,
                const char* out_header_path) {
     std::ofstream out_file;
     out_file.open(out_path, std::ofstream::binary);
     if (!out_file.good()) {
         fprintf(stderr, "error: unable to open %s\n", out_path);
-        return -1;
+        return false;
     }
 
     // root of our tree
@@ -40,7 +40,7 @@ static int run(std::vector<std::string>& in_paths, const char* out_path,
     
         if (!in_file.good()) {
             fprintf(stderr, "error: unable to open %s\n", in_path);
-            return -1;
+            return false;
         }
 
         Tokenizer tokenizer(in_file);
@@ -48,7 +48,7 @@ static int run(std::vector<std::string>& in_paths, const char* out_path,
             Token token;
 
             if (!tokenizer.next_token(token)) {
-                return -1;
+                return false;
             }
             if (token.type == TOKEN_EOF) {
                 // on to the next input file
@@ -58,16 +58,16 @@ static int run(std::vector<std::string>& in_paths, const char* out_path,
             // handle ID declarations        
             mdi_type_t type = token.get_type_name();
             if (type != MDI_INVALID_TYPE) {
-                if (parse_id_declaration(tokenizer, type)) {
-                    return -1;
+                if (!parse_id_declaration(tokenizer, type)) {
+                    return false;
                 }
             } else if (token.type == TOKEN_IDENTIFIER) {
-                if (parse_node(tokenizer, token, root)) {
-                    return -1;
+                if (!parse_node(tokenizer, token, root)) {
+                    return false;
                 }
             } else {
                 fprintf(stderr, "unexpected token \"%s\" at top level\n", token.string_value.c_str());
-                return -1;
+                return false;
             }
         }
     }
@@ -80,7 +80,7 @@ static int run(std::vector<std::string>& in_paths, const char* out_path,
         out_file.open(out_header_path, std::ofstream::binary);
         if (!out_file.good()) {
             fprintf(stderr, "error: unable to open %s\n", out_header_path);
-            return -1;
+            return false;
         }
         print_header_file(out_file);
     }
