@@ -4,7 +4,12 @@
 
 #pragma once
 
+#include <inttypes.h>
+
+#include <fstream>
 #include <string>
+
+#include <magenta/mdi.h>
 
 enum TokenType {
     TOKEN_INVALID = 0,
@@ -44,3 +49,31 @@ enum TokenType {
 };
 
 TokenType find_reserved_word(std::string& string);
+
+struct Token {
+    TokenType   type;
+    uint64_t    int_value;
+    std::string string_value;   // raw string value
+
+    // returns type for type name tokens
+    mdi_type_t get_type_name();
+
+    void print();
+};
+
+struct Tokenizer {
+    std::ifstream& in_file;
+    char peek[2];
+
+    Tokenizer(std::ifstream& in_file);
+    char next_char();
+    char peek_char();
+    void eat_whitespace();
+    bool parse_identifier(Token& token, char ch);
+    bool parse_integer(Token& token, char ch);
+    bool parse_string(Token& token);
+
+    // returns false if we cannot parse the next token
+    // EOF is not considered an error
+    bool next_token(Token& token);
+};
