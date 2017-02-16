@@ -34,8 +34,9 @@ typedef enum {
 // encodes both name and type of the node
 typedef uint32_t mdi_id_t;
 #define MDI_ID_TYPE_SHIFT   24
-#define MDI_ID_TYPE(id)     (mdi_type_t)(id >> MDI_ID_TYPE_SHIFT)
 #define MDI_MAX_ID          ((1 << MDI_ID_TYPE_SHIFT) - 1)
+#define MDI_ID_TYPE(id)     (mdi_type_t)((id) >> MDI_ID_TYPE_SHIFT)
+#define MDI_ID_NUM(id)      ((id) & MDI_MAX_ID)
 #define MDI_ID(type, num)   ((type << MDI_ID_TYPE_SHIFT) | num)
 
 typedef struct {

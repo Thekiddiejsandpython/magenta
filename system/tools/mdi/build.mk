@@ -7,9 +7,10 @@
 LOCAL_DIR := $(GET_LOCAL_DIR)
 
 MDIGEN := $(BUILDDIR)/tools/mdigen
+MDIDUMP := $(BUILDDIR)/tools/mdidump
 MDIGEN_CFLAGS := -Isystem/public
 
-TOOLS := $(MDIGEN)
+TOOLS := $(MDIGEN) $(MDIDUMP)
 
 SRC := \
     $(LOCAL_DIR)/mdigen.cpp \
@@ -17,9 +18,15 @@ SRC := \
     $(LOCAL_DIR)/tokens.cpp \
 
 $(MDIGEN): $(SRC)
-	@echo compiling $^
+	@echo compiling $@
 	@$(MKDIR)
 	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $^
+
+$(MDIDUMP): $(LOCAL_DIR)/mdidump.cpp
+	@echo compiling $@
+	@$(MKDIR)
+	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $<
+
 
 GENERATED += $(TOOLS)
 EXTRA_BUILDDEPS += $(TOOLS)
