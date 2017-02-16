@@ -22,7 +22,7 @@
 
 static int run(std::vector<std::string>& in_paths, const char* out_path) {
     std::ofstream out_file;
-    out_file.open(out_path, std::ofstream::out);
+    out_file.open(out_path, std::ofstream::binary);
     if (!out_file.good()) {
         fprintf(stderr, "error: unable to open %s\n", out_path);
         return -1;
@@ -74,6 +74,8 @@ static int run(std::vector<std::string>& in_paths, const char* out_path) {
 #if PRINT_PARSE_TREE
     root.print(0);
 #endif
+
+    root.serialize(out_file);
 
     return 0;
 }

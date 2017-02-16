@@ -27,7 +27,8 @@ const char* get_id_name(mdi_id_t id) {
 
 Node::Node(mdi_id_t id) {
     node.id = id;
-    node.length = MDI_ALIGN(sizeof(node));
+    static_assert(sizeof(node) == MDI_ALIGN(sizeof(node)), "");
+    node.length = sizeof(node);
 }
 
 void Node::print_indent(int depth) {
@@ -104,6 +105,30 @@ void Node::print(int depth) {
         printf(" ");
     }
 }
+
+int Node::serialize(std::ofstream& out_file) {
+    out_file.write((const char *)&node, sizeof(node));
+
+    // string values written immediately after the mdi_node_t
+    if (MDI_ID_TYPE(node.id) == MDI_STRING) {
+        out_file.write(string_value.c_str(), string_value.length() + 1);
+
+        // align to MDI_ALIGNMENT boundary
+        int pad = MDI_ALIGN(node.length) - node.length;
+        if (pad) {
+            char zeros[MDI_ALIGNMENT] = { 0 };
+            out_file.write(zeros, pad);
+        }
+    }
+
+    for (auto iter = children.begin(); iter != children.end(); iter++) {
+        iter->serialize(out_file);
+    }
+
+// TODO - error handling
+    return 0;
+}
+
 
 int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
     mdi_type_t child_type = MDI_INVALID_TYPE;
@@ -358,6 +383,7 @@ static int parse_list_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node
         children_length += iter->node.length;
     }
     node.node.length = MDI_ALIGN(sizeof(node.node) + children_length);
+    node.node.value.list_count = node.children.size();
 
     parent.children.push_back(node);
     return 0;
@@ -416,6 +442,8 @@ static int parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Nod
         children_length += iter->node.length;
     }
     node.node.length = MDI_ALIGN(sizeof(node.node) + children_length);
+    node.node.value.array.type = element_type;
+    node.node.value.array.count = node.children.size();
 
     parent.children.push_back(node);
     return 0;

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,8 @@ struct Node {
     void print_indent(int depth);
     void print_children(int depth);
     void print(int depth);
+
+    int serialize(std::ofstream& out_file);
 };
 
 int parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type);

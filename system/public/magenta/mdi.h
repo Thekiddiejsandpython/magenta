@@ -11,7 +11,7 @@ __BEGIN_CDECLS;
 
 // MDI Nodes are aligned to 4 byte boundaries
 #define MDI_ALIGNMENT   4
-#define MDI_ALIGN(x)    (((x) + MDI_ALIGNMENT - 1) & (MDI_ALIGNMENT - 1))
+#define MDI_ALIGN(x)    (((x) + MDI_ALIGNMENT - 1) & ~(MDI_ALIGNMENT - 1))
 
 // MDI node type
 typedef enum {
