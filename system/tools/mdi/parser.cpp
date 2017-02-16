@@ -26,6 +26,7 @@ const char* get_id_name(mdi_id_t id) {
 }
 
 Node::Node(mdi_id_t id) {
+    memset(&node, 0, sizeof(node));
     node.id = id;
     static_assert(sizeof(node) == MDI_ALIGN(sizeof(node)), "");
     node.length = sizeof(node);
