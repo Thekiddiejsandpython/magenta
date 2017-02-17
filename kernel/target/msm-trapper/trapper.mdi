@@ -1,5 +1,11 @@
 include "kernel/include/mdi/kernel-defs.mdi"
 
+test-string-array = [ "hello" "goodbye" "why?" ]
+
+test-bool-array = [ true false true ]
+test-int-array = [ 1 2 3 ]
+test-string = "foo"
+
 cpu-map = {
     cpu-clusters = [
         {
@@ -40,3 +46,4 @@ cpu-map = {
         }
     ]
 }
+
