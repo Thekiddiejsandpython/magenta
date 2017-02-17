@@ -14,10 +14,12 @@ TOOLS := $(MDIGEN) $(MDIDUMP)
 
 SRC := \
     $(LOCAL_DIR)/mdigen.cpp \
+    $(LOCAL_DIR)/node.cpp \
     $(LOCAL_DIR)/parser.cpp \
     $(LOCAL_DIR)/tokens.cpp \
 
 HEADERS := \
+    $(LOCAL_DIR)/node.h \
     $(LOCAL_DIR)/parser.h \
     $(LOCAL_DIR)/tokens.h \
     system/public/magenta/mdi.h \

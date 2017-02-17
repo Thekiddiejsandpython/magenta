@@ -15,6 +15,7 @@
 
 #include <magenta/mdi.h>
 
+#include "node.h"
 #include "parser.h"
 #include "tokens.h"
 
