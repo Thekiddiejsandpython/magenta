@@ -1,12 +1,38 @@
 include "kernel/arch/arm64/include/mdi/arm64-defs.mdi"
 
-blee = {
-    rrrr = {
-        foo = true
+cpu-map = {
+    cpu-cluster = {
+        cpu-cluster-id = 0
+        cpus = {
+            cpu = {
+                cpu-id = 0
+            }
+            cpu = {
+                cpu-id = 1
+            }
+            cpu = {
+                cpu-id = 2
+            }
+            cpu = {
+                cpu-id = 3
+            }
+        }
     }
-    faa = "hi there"
+    cpu-cluster = {
+        cpu-cluster-id = 1
+        cpus = {
+            cpu = {
+                cpu-id = 128
+            }
+            cpu = {
+                cpu-id = 129
+            }
+            cpu = {
+                cpu-id = 130
+            }
+            cpu = {
+                cpu-id = 131
+            }
+        }
+    }
 }
-
-bleeker = [ 1 2 3 ]
-
-bool_array = [ true false true ]

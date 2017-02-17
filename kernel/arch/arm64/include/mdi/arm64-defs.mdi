@@ -1,6 +1,11 @@
-boolean foo 1
-string faa 2
-list blee 3
-list rrrr 4
-array[uint32] bleeker 5
-array[boolean] bool_array 6
+/*
+ *  TYPE    ID NAME         ID NUMBER
+ */
+
+    // CPU topology IDs 
+    list    cpu-map             1
+    list    cpu-cluster         2
+    uint32  cpu-cluster-id      3
+    list    cpus                4
+    list    cpu                 5
+    uint32  cpu-id              6
