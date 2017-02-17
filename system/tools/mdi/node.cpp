@@ -80,6 +80,49 @@ void Node::print(int depth) {
     }
 }
 
+void Node::compute_array_length() {
+    // recurse through our children first
+    int children_length = 0;
+    int child_count = children.size();
+
+    if (array_element_type == MDI_STRING || array_element_type == MDI_LIST ||
+            array_element_type == MDI_ARRAY) {
+        for (auto iter = children.begin(); iter != children.end(); iter++) {
+            iter->compute_node_length();
+            children_length += iter->array_element_length;
+        }
+    }
+
+    switch (array_element_type) {
+        case MDI_INT8:
+        case MDI_UINT8:
+        case MDI_BOOLEAN:
+            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint8_t));
+            break;
+        case MDI_INT16:
+        case MDI_UINT16:
+            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint16_t));
+            break;
+        case MDI_INT32:
+        case MDI_UINT32:
+            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint32_t));
+            break;
+        case MDI_INT64:
+        case MDI_UINT64:
+            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint64_t));
+            break;
+        case MDI_STRING:
+        case MDI_LIST:
+        case MDI_ARRAY:
+            // mdi_node_t is followed by list of offsets and then element values
+            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(mdi_offset_t) + children_length);
+            break;
+        default:
+            assert(0);
+            break;
+    }
+}
+
 void Node::compute_node_length() {
     switch (MDI_ID_TYPE(id)) {
         case MDI_INT8:
@@ -93,12 +136,18 @@ void Node::compute_node_length() {
         case MDI_BOOLEAN:
             // primitive types are self contained
             length = sizeof(mdi_node_t);
+            // array_element_length not used for these types
+            array_element_length = 0;
             break;
         case MDI_STRING:
             // zero terminated string follows the mdi_node_t
-            length = MDI_ALIGN(sizeof(mdi_node_t) + string_value.length() + 1);
+            array_element_length = string_value.length() + 1;
+            length = MDI_ALIGN(sizeof(mdi_node_t) + array_element_length);
             break;  
         case MDI_ARRAY:
+            compute_array_length();
+            array_element_length = length;
+            break;
         case MDI_LIST:
             length = sizeof(mdi_node_t);
             // recurse through our children
@@ -106,6 +155,7 @@ void Node::compute_node_length() {
                 iter->compute_node_length();
                 length += iter->length;
             }
+            array_element_length = length;
             break;
         case MDI_INVALID_TYPE:
         default:
@@ -122,8 +172,10 @@ bool Node::serialize(std::ofstream& out_file) {
     memset(&node, 0, sizeof(node));
     node.id = id;
     node.length = length;
+    mdi_type_t type = MDI_ID_TYPE(id);
+    int child_count = children.size();
 
-    switch (MDI_ID_TYPE(id)) {
+    switch (type) {
         case MDI_INT8:
         case MDI_UINT8:
             node.value.u8 = (uint8_t)int_value;
@@ -141,7 +193,7 @@ bool Node::serialize(std::ofstream& out_file) {
             node.value.u64 = int_value;
             break;
         case MDI_BOOLEAN:
-            node.value.u8 = bool_value;
+            node.value.u8 = int_value;
             break;
         case MDI_STRING:
             node.value.str_len = string_value.length() + 1;
@@ -161,22 +213,101 @@ bool Node::serialize(std::ofstream& out_file) {
 
     out_file.write((const char *)&node, sizeof(node));
 
-    // string values written immediately after the mdi_node_t
-    if (MDI_ID_TYPE(id) == MDI_STRING) {
-        int length = string_value.length() + 1;
-        out_file.write(string_value.c_str(), length);
+    // length following node that may need padding
+    int pad_length = 0;
 
-        // align to MDI_ALIGNMENT boundary
-        length += sizeof(node);
-        int pad = MDI_ALIGN(length) - length;
-        if (pad) {
-            char zeros[MDI_ALIGNMENT] = { 0 };
-            out_file.write(zeros, pad);
+    if (type == MDI_STRING) {
+        // string values are written immediately after the mdi_node_t
+        int strlen = string_value.length() + 1;
+        out_file.write(string_value.c_str(), strlen);
+        // may need to pad following string value
+        pad_length = strlen;
+    } else if (type == MDI_LIST) {
+        // children are recursively written following node
+        for (auto iter = children.begin(); iter != children.end(); iter++) {
+            iter->serialize(out_file);
+        }
+    } else if (type == MDI_ARRAY) {
+        // array element values are written immediately after the mdi_node_t
+        // handled differently depending on element type
+        switch (array_element_type) {
+            case MDI_INT8:
+            case MDI_UINT8:
+            case MDI_BOOLEAN:
+                // raw values immediately follow node
+                for (auto iter = children.begin(); iter != children.end(); iter++) {
+                    uint8_t value = iter->int_value;
+                    out_file.write((const char *)&value, sizeof(value));
+                }
+                pad_length = child_count * sizeof(uint8_t);
+                break;
+            case MDI_INT16:
+            case MDI_UINT16:
+                // raw values immediately follow node
+                for (auto iter = children.begin(); iter != children.end(); iter++) {
+                    uint16_t value = iter->int_value;
+                    out_file.write((const char *)&value, sizeof(value));
+                }
+                pad_length = child_count * sizeof(uint16_t);
+                break;
+            case MDI_INT32:
+            case MDI_UINT32:
+                // raw values immediately follow node
+                for (auto iter = children.begin(); iter != children.end(); iter++) {
+                    uint32_t value = iter->int_value;
+                    out_file.write((const char *)&value, sizeof(value));
+                }
+                pad_length = child_count * sizeof(uint32_t);
+                break;
+            case MDI_INT64:
+            case MDI_UINT64:
+                // raw values immediately follow node
+                for (auto iter = children.begin(); iter != children.end(); iter++) {
+                    uint64_t value = iter->int_value;
+                    out_file.write((const char *)&value, sizeof(value));
+                }
+                pad_length = child_count * sizeof(uint64_t);
+                break;
+            case MDI_STRING:
+            case MDI_LIST:
+            case MDI_ARRAY: {
+                // here we write offsets to element values followed by the actual elements
+                // compute offset of first element value relative to beginning of node
+                mdi_offset_t offset = sizeof(node) + child_count * sizeof(mdi_offset_t);
+
+                // write element offsets
+                for (auto iter = children.begin(); iter != children.end(); iter++) {
+                    out_file.write((const char *)&offset, sizeof(offset));
+                    offset += iter->array_element_length;
+                }
+                // write element values
+                if (array_element_type == MDI_STRING) {
+                    // write raw strings
+                    for (auto iter = children.begin(); iter != children.end(); iter++) {
+                        int strlen = iter->string_value.length() + 1;
+                        out_file.write(iter->string_value.c_str(), strlen);
+                        pad_length += strlen;
+                    }
+                } else {
+                    // recursively serialize list and array elements
+                    for (auto iter = children.begin(); iter != children.end(); iter++) {
+                        iter->serialize(out_file);
+                    }
+                    // list and array elements will be aligned, so no need to update pad_length
+                }
+                break;
+            }                
+            default:
+                assert(0);
+                break;
         }
     }
 
-    for (auto iter = children.begin(); iter != children.end(); iter++) {
-        iter->serialize(out_file);
+    // align to MDI_ALIGNMENT boundary
+    int pad = MDI_ALIGN(pad_length) - pad_length;
+    if (pad) {
+        char zeros[MDI_ALIGNMENT] = { 0 };
+        out_file.write(zeros, pad);
     }
 
 // TODO - error handling

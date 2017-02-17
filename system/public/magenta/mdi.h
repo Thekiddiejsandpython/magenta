@@ -13,10 +13,12 @@ __BEGIN_CDECLS;
 #define MDI_ALIGNMENT   4
 #define MDI_ALIGN(x)    (((x) + MDI_ALIGNMENT - 1) & ~(MDI_ALIGNMENT - 1))
 
+// 32-bit offset used for array element offsets
+typedef uint32_t mdi_offset_t;
+
 // MDI node type
 typedef enum {
-    MDI_INVALID_TYPE = -1,
-    MDI_LIST = 0,   // node is a list of children
+    MDI_INVALID_TYPE,
     MDI_INT8,       // signed 8-bit integer type
     MDI_UINT8,      // unsigned 8-bit integer type
     MDI_INT16,      // signed 16-bit integer type
@@ -27,7 +29,8 @@ typedef enum {
     MDI_UINT64,     // unsigned 64-bit integer type
     MDI_BOOLEAN,    // boolean type
     MDI_STRING,     // zero terminated char string
-    MDI_ARRAY,      // list of children with same type
+    MDI_LIST,       // node is a list of children
+    MDI_ARRAY,      // array of elements with same type laid out for fast random access
 } mdi_type_t;
 
 // MDI node identifier
@@ -39,9 +42,22 @@ typedef uint32_t mdi_id_t;
 #define MDI_ID_NUM(id)      ((id) & MDI_MAX_ID)
 #define MDI_ID(type, num)   ((type << MDI_ID_TYPE_SHIFT) | num)
 
+// mdi_node_t represents a node in the device index.
+// For integer and boolean types, the mdi_node_t is self contained and
+// mdi_node_t.length is sizeof(mdi_node_t).
+// Nodes of type MDI_STRING are immediately followed by a zero terminated char string.
+// Nodes of type MDI_LIST are followed by the list's child nodes.
+// Nodes of type MDI_ARRAY are followed by the raw array element values.
+// For arrays with integer or boolean element type, the following data is a packed
+// array of 8, 16, 32 or 64 bit integers.
+// For arrays with element type MDI_STRING, the mdi_node_t is followed by an array of uint32_t
+// offsets to the zero terminated string values (relative to the address of the mdi_node_t),
+// and then the actual string values.
+// For arrays with element type MDI_LIST or MDI_ARRAY, the mdi_node_t is followed by an array of
+// uint32_t offsets to the element nodes, followed by the child element themselves.
 typedef struct {
     mdi_id_t    id;
-    uint32_t    length; // total length of the node, including subtree
+    uint32_t    length;         // total length of the node, including subtree
     union {
         uint32_t    list_count; // number of children following this struct
         int8_t      i8;
@@ -59,6 +75,5 @@ typedef struct {
         } array;
     } value;
 } __attribute__ ((packed)) mdi_node_t;
-
 
 __END_CDECLS;

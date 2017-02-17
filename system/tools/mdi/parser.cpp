@@ -55,24 +55,6 @@ static bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
         }
 
         child_type = token.get_type_name();
-        switch (child_type) {
-            case MDI_INT8:
-            case MDI_UINT8:
-            case MDI_INT16:
-            case MDI_UINT16:
-            case MDI_INT32:
-            case MDI_UINT32:
-            case MDI_INT64:
-            case MDI_UINT64:
-            case MDI_BOOLEAN:
-                // these are OK
-                break;
-            default:
-                tokenizer.print_err("unsupported array child type \"%s\". "
-                                    "Only integer and boolean types are currently supported\n",
-                                    token.string_value.c_str());
-                return false;
-        }
 
         if (!tokenizer.next_token(token)) {
             return false;
@@ -238,9 +220,9 @@ static bool parse_boolean_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, 
     Node node(id);
 
     if (token.type == TOKEN_TRUE) {
-        node.bool_value = true;
+        node.int_value = 1;
     } else if (token.type == TOKEN_FALSE) {
-        node.bool_value = false;
+        node.int_value = 0;
     } else {
         tokenizer.print_err("expected boolean value for node \"%s\", got \"%s\"\n", get_id_name(id),
                             token.string_value.c_str());
@@ -291,6 +273,7 @@ static bool parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, No
     mdi_id_t element_id = MDI_ID(element_type, 0);
 
     Node node(id);
+    node.array_element_type = element_type;
 
     while (1) {
         Token token;
@@ -319,6 +302,21 @@ static bool parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, No
                 break;
             case MDI_BOOLEAN:
                 if (!parse_boolean_node(tokenizer, token, element_id, node)) {
+                    return false;
+                }
+                break;
+            case MDI_STRING:
+                if (!parse_string_node(tokenizer, token, element_id, node)) {
+                    return false;
+                }
+                break;
+            case MDI_LIST:
+                if (!parse_list_node(tokenizer, token, element_id, node)) {
+                    return false;
+                }
+                break;
+            case MDI_ARRAY:
+                if (!parse_array_node(tokenizer, token, element_id, node)) {
                     return false;
                 }
                 break;

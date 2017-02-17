@@ -12,6 +12,138 @@
 
 #include <magenta/mdi.h>
 
+static void dump_node(int fd, int level);
+
+static void print_indent(int level) {
+    for (int i = 0; i < level; i++) {
+        printf("    ");
+    }
+}
+
+static void dump_string(int fd) {
+    printf("\"");
+    while (1) {
+        char ch;
+        read(fd, &ch, sizeof(ch));
+        if (ch) {
+            printf("%c", ch);
+         } else {
+            break;
+         }
+     }
+    printf("\"");
+}
+
+static void dump_array_node(int fd, int level, mdi_node_t& node) {
+    uint32_t count = node.value.array.count;
+
+    // offset of node start. element offsets are relative to this
+    off_t node_start = lseek(fd, 0, SEEK_CUR) - sizeof(node);
+
+    printf("[ ");
+    switch (node.value.array.type) {
+        case MDI_INT8:
+            for (int i = 0; i < count; i++) {
+                int8_t value;
+                read(fd, &value, sizeof(value));
+                printf("%d ", value);
+            }
+            break;
+        case MDI_UINT8:
+            for (int i = 0; i < count; i++) {
+                uint8_t value;
+                read(fd, &value, sizeof(value));
+                printf("%u ", value);
+            }
+            break;
+        case MDI_INT16:
+            for (int i = 0; i < count; i++) {
+                int16_t value;
+                read(fd, &value, sizeof(value));
+                printf("%d ", value);
+            }
+            break;
+        case MDI_UINT16:
+            for (int i = 0; i < count; i++) {
+                uint16_t value;
+                read(fd, &value, sizeof(value));
+                printf("%u ", value);
+            }
+            break;
+        case MDI_INT32:
+            for (int i = 0; i < count; i++) {
+                int32_t value;
+                read(fd, &value, sizeof(value));
+                printf("%d ", value);
+            }
+            break;
+        case MDI_UINT32:
+            for (int i = 0; i < count; i++) {
+                uint32_t value;
+                read(fd, &value, sizeof(value));
+                printf("%u ", value);
+            }
+            break;
+        case MDI_INT64:
+            for (int i = 0; i < count; i++) {
+                int64_t value;
+                read(fd, &value, sizeof(value));
+                printf("%" PRId64 " ", value);
+            }
+            break;
+        case MDI_UINT64:
+            for (int i = 0; i < count; i++) {
+                uint64_t value;
+                read(fd, &value, sizeof(value));
+                printf("%" PRIu64 " ", value);
+            }
+            break;
+        case MDI_BOOLEAN:
+            for (int i = 0; i < count; i++) {
+                int8_t value;
+                read(fd, &value, sizeof(value));
+                printf("%s ",  (value ? "true" : "false"));
+            }
+            break;
+        case MDI_STRING:
+            printf("\n");
+            for (int i = 0; i < count; i++) {
+                mdi_offset_t offset;
+                // read element offset
+                read(fd, &offset, sizeof(offset));
+                off_t saved_offset = lseek(fd, 0, SEEK_CUR);
+                lseek(fd, node_start + offset, SEEK_SET);
+                print_indent(level + 1);
+                dump_string(fd);
+                printf("\n");
+                lseek(fd, saved_offset, SEEK_SET);
+            }
+            print_indent(level);
+            break;   
+        case MDI_LIST:
+        case MDI_ARRAY:
+            printf("\n");
+            for (int i = 0; i < count; i++) {
+                mdi_offset_t offset;
+                // read element offset
+                read(fd, &offset, sizeof(offset));
+                off_t saved_offset = lseek(fd, 0, SEEK_CUR);
+                lseek(fd, node_start + offset, SEEK_SET);
+                dump_node(fd, level + 1);
+                lseek(fd, saved_offset, SEEK_SET);
+            }
+            print_indent(level);
+            break;   
+        default:
+            fprintf(stderr, "bad array element type %d\n", node.value.array.type);
+            abort();
+    }
+
+    printf("]");
+
+    lseek(fd, node_start + node.length, SEEK_SET);
+}
+
 static void dump_node(int fd, int level) {
     mdi_node_t node;
 
@@ -22,17 +154,10 @@ static void dump_node(int fd, int level) {
 
     mdi_type_t type = MDI_ID_TYPE(node.id);
     uint32_t id_num = MDI_ID_NUM(node.id);
-    int child_count = 0;
 
-    for (int i = 0; i < level; i++) {
-        printf("    ");
-    }
+    print_indent(level);
 
     switch (type) {
-        case MDI_LIST:
-            printf("list(%u)", id_num);
-            child_count = node.value.list_count;
-            break;
         case MDI_INT8:
             printf("int8(%u) = %d", id_num, node.value.i8);
             break;
@@ -61,25 +186,31 @@ static void dump_node(int fd, int level) {
             printf("boolean(%u) = %s", id_num, (node.value.u8 ? "true" : "false"));
             break;
         case MDI_STRING: {
-            printf("string(%u)", id_num);
-            char* buffer = new char[node.length - sizeof(node)];
-            read(fd, buffer, node.length - sizeof(node));
-            printf(" \"%s\"", buffer);
-            delete[] buffer;
+            off_t node_start = lseek(fd, 0, SEEK_CUR) - sizeof(node);
+            printf("string(%u) = ", id_num);
+            dump_string(fd);
+            lseek(fd, node_start + node.length, SEEK_SET);
+            break;
+        }
+        case MDI_LIST: {
+            printf("list(%u) = {\n", id_num);
+            uint32_t child_count = node.value.list_count;
+            for (uint32_t i = 0; i < child_count; i++) {
+                dump_node(fd, level + 1);
+            }
+            print_indent(level);
+            printf("}");
             break;
         }
         case MDI_ARRAY:
-            printf("array(%u)", id_num);
-            child_count = node.value.array.count;
+            printf("array(%u) = ", id_num);
+            dump_array_node(fd, level, node); 
             break;
         default:
             fprintf(stderr, "unknown type %d\n", type);
     }
     printf("\n");
 
-    for (int i = 0; i < child_count; i++) {
-        dump_node(fd, level + 1);
-    }
 }
 
 int main(int argc, char* argv[]) {
