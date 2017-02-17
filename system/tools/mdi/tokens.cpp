@@ -161,30 +161,55 @@ void Token::print() {
     }
 }
 
-Tokenizer::Tokenizer(std::ifstream& in_file)
-    : in_file(in_file)
-{
+Tokenizer::Tokenizer() {
+}
+
+Tokenizer::~Tokenizer() {
+}
+
+bool Tokenizer::open_file(const char* path) {
+    in_file.open(path, std::ifstream::in);
+
+    if (!in_file.good()) {
+        fprintf(stderr, "error: unable to open %s\n", path);
+        return false;
+    }
+
+    current_file = path;
+    getline(in_file, current_line);
+    line_number = 1;
+    line_offset = 0;
     memset(peek, 0, sizeof(peek));
+    return true;
+}
+
+char Tokenizer::get_char() {
+    if (line_offset < current_line.length()) {
+        return current_line[line_offset++];
+    } else if (in_file.eof()) {
+        return EOF;
+    } else {
+        getline(in_file, current_line);
+        line_number++;
+        line_offset = 0;
+        return '\n';
+    }
 }
 
 char Tokenizer::next_char() {
-    char ch;
-
     if (peek[0]) {
-        ch = peek[0];
+        char ch = peek[0];
         peek[0] = peek[1];
         peek[1] = 0;
-    } else if (in_file.eof()) {
-        ch = EOF;
+        return ch;
     } else {
-        in_file.get(ch);
+        return get_char();
     }
-    return ch;
 }
 
 char Tokenizer::peek_char() {
     if (!peek[0]) {
-         in_file.get(peek[0]);
+        peek[0] = next_char();
     }
     return peek[0];
 }
@@ -296,7 +321,7 @@ bool Tokenizer::parse_integer(Token& token, char ch) {
         }
 
         if (++digit_count > 16) {
-            fprintf(stderr, "integer value too large\n");
+            print_err("integer value too large\n");
             return false;
         }
 
@@ -312,7 +337,7 @@ bool Tokenizer::parse_integer(Token& token, char ch) {
 
     token.type = (negative ? TOKEN_NEG_INT_LITERAL : TOKEN_INT_LITERAL);
     if (negative && value > -INT64_MIN) {
-        fprintf(stderr, "integer value too small\n");
+        print_err("integer value too small\n");
         return false;
     }
     token.int_value = value;
@@ -364,7 +389,7 @@ bool Tokenizer::parse_string(Token& token) {
                     ch = '?';
                     break;
                 default:
-                    fprintf(stderr, "Unsupported escape sequence \\%c in string literal\n", ch);
+                    print_err("unsupported escape sequence \\%c in string literal\n", ch);
                     return false;
             }
         } else if (ch == '\"') {
@@ -376,7 +401,7 @@ bool Tokenizer::parse_string(Token& token) {
         ch = next_char();
     }
 
-    fprintf(stderr, "end of file during unterminated string\n");
+    print_err("end of file during unterminated string\n");
     return false;
 }
 
@@ -397,7 +422,7 @@ bool Tokenizer::next_token(Token& token) {
         switch (ch) {
             case EOF:
                 token.type = TOKEN_EOF;
-                return true;
+                break;
             case '{':
                 token.type = TOKEN_LIST_START;
                 break;
@@ -414,7 +439,7 @@ bool Tokenizer::next_token(Token& token) {
                 token.type = TOKEN_EQUALS;
                 break;
             default:
-                fprintf(stderr, "invalid token \'%c\'\n", ch);
+                print_err("invalid token \'%c\'\n", ch);
                 result = false;
         }
         token.string_value.clear();
@@ -428,4 +453,12 @@ bool Tokenizer::next_token(Token& token) {
 #endif
 
     return result;
+}
+
+void Tokenizer::print_err(const char* fmt, ...) {
+    fprintf(stderr, "%s:%d:%d: error: ", current_file.c_str(), line_number, line_offset);
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
 }

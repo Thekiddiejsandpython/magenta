@@ -43,8 +43,6 @@ enum TokenType {
     TOKEN_LIST_TYPE,        // "list"
 };
 
-TokenType find_reserved_word(std::string& string);
-
 struct Token {
     TokenType   type;
     uint64_t    int_value;
@@ -56,11 +54,21 @@ struct Token {
     void print();
 };
 
-struct Tokenizer {
-    std::ifstream& in_file;
-    char peek[2];
+class Tokenizer {
+public:
+    Tokenizer();
+    ~Tokenizer();
 
-    Tokenizer(std::ifstream& in_file);
+    bool open_file(const char* path);
+
+    // returns false if we cannot parse the next token
+    // TOKEN_EOF is returned at end of file
+    bool next_token(Token& token);
+
+    void print_err(const char* fmt, ...);
+
+private:
+    char get_char();
     char next_char();
     char peek_char();
     void eat_whitespace();
@@ -68,7 +76,10 @@ struct Tokenizer {
     bool parse_integer(Token& token, char ch);
     bool parse_string(Token& token);
 
-    // returns false if we cannot parse the next token
-    // EOF is not considered an error
-    bool next_token(Token& token);
+    std::ifstream in_file;
+    std::string current_file;
+    std::string current_line;
+    int line_number;
+    int line_offset;
+    char peek[2];
 };
