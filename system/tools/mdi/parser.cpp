@@ -165,7 +165,7 @@ static bool parse_include(Tokenizer& tokenizer, Node& root) {
         return false;
     }
 
-    return process_file(token.string_value.c_str(), root);
+    return process_file(&tokenizer, token.string_value.c_str(), root);
 }
 
 static bool parse_int_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node& parent) {
@@ -382,9 +382,9 @@ static bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
     }
 }
 
-bool process_file(const char* in_path, Node& root) {
+bool process_file(Tokenizer* container, const char* in_path, Node& root) {
     Tokenizer tokenizer;
-    if (!tokenizer.open_file(in_path)) {
+    if (!tokenizer.open_file(container, in_path)) {
         return false;
     }
 

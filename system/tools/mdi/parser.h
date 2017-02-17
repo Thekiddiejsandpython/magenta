@@ -11,7 +11,8 @@
 #include "tokens.h"
 
 struct Node;
+class Tokenizer;
 
 const char* get_id_name(mdi_id_t id);
-bool process_file(const char* in_path, Node& root);
+bool process_file(Tokenizer* container, const char* in_path, Node& root);
 bool print_header_file(std::ofstream& out_file);

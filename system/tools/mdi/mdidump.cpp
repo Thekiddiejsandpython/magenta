@@ -64,7 +64,7 @@ static void dump_node(int fd, int level) {
             printf("string(%u)", id_num);
             char* buffer = new char[node.length - sizeof(node)];
             read(fd, buffer, node.length - sizeof(node));
-            printf(" %s", buffer);
+            printf(" \"%s\"", buffer);
             delete[] buffer;
             break;
         }

@@ -167,11 +167,15 @@ Tokenizer::Tokenizer() {
 Tokenizer::~Tokenizer() {
 }
 
-bool Tokenizer::open_file(const char* path) {
+bool Tokenizer::open_file(Tokenizer* container, const char* path) {
     in_file.open(path, std::ifstream::in);
 
     if (!in_file.good()) {
-        fprintf(stderr, "error: unable to open %s\n", path);
+        if (container) {
+            container->print_err("unable to open %s\n", path);
+        } else {
+            fprintf(stderr, "error: unable to open %s\n", path);
+        }
         return false;
     }
 

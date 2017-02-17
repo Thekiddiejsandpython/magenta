@@ -36,7 +36,7 @@ static bool run(std::vector<std::string>& in_paths, const char* out_path,
     // iterate through our input files
     for (auto iter = in_paths.begin(); iter != in_paths.end(); iter++) {
         const char* in_path = iter->c_str();
-        if (!process_file(in_path, root)) {
+        if (!process_file(nullptr, in_path, root)) {
             return false;
         }
      }

@@ -59,7 +59,7 @@ public:
     Tokenizer();
     ~Tokenizer();
 
-    bool open_file(const char* path);
+    bool open_file(Tokenizer* container, const char* path);
 
     // returns false if we cannot parse the next token
     // TOKEN_EOF is returned at end of file
