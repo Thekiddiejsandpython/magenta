@@ -161,7 +161,8 @@ void platform_early_init(void)
     find_command_line();
 #endif
 
-    mdi_init();
+    mdi_node_ref_t  mdi_root;
+    mdi_init_embedded(&mdi_root);
 
     uart_init_early();
 

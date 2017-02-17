@@ -13,12 +13,18 @@ extern const uint8_t embedded_mdi[];
 extern const uint32_t embedded_mdi_len;
 #endif
 
-int mdi_init(void) {
-#if EMBED_MDI
-    uint32_t* ptr = (uint32_t *)embedded_mdi;
-    printf("embedded_mdi: %08X %08X %08X %08X length: %u\n",
-            ptr[0], ptr[1], ptr[2], ptr[3], embedded_mdi_len);
-#endif
 
-    return 0;
+// takes pointer to MDI header and returns reference to MDI root node
+mx_status_t mdi_init(void* mdi_header, mdi_node_ref_t* out_node_ref) {
+    // TODO - check header once we define one
+    *out_node_ref = (mdi_node_ref_t)mdi_header;
+    return NO_ERROR;
 }
+
+#if EMBED_MDI
+// returns reference to MDI root node from MDI embedded in kernel image
+mx_status_t mdi_init_embedded(mdi_node_ref_t* out_node_ref) {
+    *out_node_ref = (mdi_node_ref_t)embedded_mdi;
+    return NO_ERROR;
+}
+#endif

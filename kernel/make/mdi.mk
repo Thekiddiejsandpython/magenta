@@ -21,3 +21,7 @@ EXTRA_BUILDDEPS += $(MDI_BIN) $(MDI_HEADER)
 
 .PHONY: mdibin
 mdibin: $(MDI_BIN)
+
+ifeq ($(EMBED_MDI),true)
+KERNEL_DEFINES += EMBED_MDI=1
+endif
