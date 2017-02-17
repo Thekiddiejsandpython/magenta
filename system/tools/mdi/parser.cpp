@@ -14,6 +14,8 @@
 
 //#define PRINT_ID_DECLARATIONS 1
 
+static bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent);
+
 // map of identifier names to mdi_id_t
 static std::map<std::string, mdi_id_t> id_map;
 
@@ -27,7 +29,7 @@ const char* get_id_name(mdi_id_t id) {
     return id_name_map[id & MDI_MAX_ID].c_str();
 }
 
-bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
+static bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
     mdi_type_t child_type = MDI_INVALID_TYPE;
 
     if (type == MDI_ARRAY) {
@@ -41,7 +43,7 @@ bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
             return false;
         }
         if (token.type != TOKEN_ARRAY_START) {
-            fprintf(stderr, "expected \'[' after \"array\"\n");
+            fprintf(stderr, "Expected \'[' after \"array\"\n");
             return false;
         }
         if (!tokenizer.next_token(token)) {
@@ -76,11 +78,11 @@ bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
             return false;
         }
         if (token.type == TOKEN_EOF) {
-            fprintf(stderr, "end of file while parsing ID declaration\n");
+            fprintf(stderr, "End of file while parsing ID declaration\n");
             return false;
         }
         if (token.type != TOKEN_ARRAY_END) {
-            fprintf(stderr, "expected \'[' after array child type\n");
+            fprintf(stderr, "Expected \'[' after array child type\n");
             return false;
         }
     }
@@ -104,14 +106,14 @@ bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
     }
 
     if (name_token.type != TOKEN_IDENTIFIER) {
-        fprintf(stderr, "expected identifier, got token \"%s\" in ID declaration\n",
+        fprintf(stderr, "Expected identifier, got token \"%s\" in ID declaration\n",
                 name_token.string_value.c_str());
         return false;
     }
     const char* name = name_token.string_value.c_str();
 
     if (number_token.type != TOKEN_INT_LITERAL) {
-        fprintf(stderr, "expected integer, got token \"%s\" in ID declaration for \"%s\"\n",
+        fprintf(stderr, "Expected integer, got token \"%s\" in ID declaration for \"%s\"\n",
                 number_token.string_value.c_str(), name);
         return false;
     }
@@ -145,6 +147,25 @@ bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type) {
     printf("ID %s : %08X\n", name, id);
 #endif
     return true;
+}
+
+static bool parse_include(Tokenizer& tokenizer, Node& root) {
+    Token token;
+
+    if (!tokenizer.next_token(token)) {
+        return false;
+    }
+    if (token.type == TOKEN_EOF) {
+        fprintf(stderr, "end of file while parsing ID declaration\n");
+        return false;
+    }
+    if (token.type != TOKEN_STRING_LITERAL) {
+        fprintf(stderr, "Expected string file path after include, got \"%s\"\n",
+                token.string_value.c_str());
+        return false;
+    }
+
+    return process_file(token.string_value.c_str(), root);
 }
 
 static bool parse_int_node(Token& token, mdi_id_t id, Node& parent) {
@@ -311,7 +332,7 @@ static bool parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, No
     return true;
 }
 
-bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
+static bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
     auto iter = id_map.find(token.string_value);
     if (iter == id_map.end()) {
         fprintf(stderr, "undefined identifier \"%s\"\n", token.string_value.c_str());
@@ -359,6 +380,50 @@ bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
             fprintf(stderr, "Internal error: Unknown type %d\n", MDI_ID_TYPE(id));
             return false;
     }
+}
+
+bool process_file(const char* in_path, Node& root) {
+   std::ifstream in_file;
+    in_file.open(in_path, std::ifstream::in);
+
+    if (!in_file.good()) {
+        fprintf(stderr, "error: unable to open %s\n", in_path);
+        return false;
+    }
+
+    Tokenizer tokenizer(in_file);
+    while (1) {
+        Token token;
+
+        if (!tokenizer.next_token(token)) {
+            return false;
+        }
+        if (token.type == TOKEN_EOF) {
+            // on to the next input file
+            break;
+        }
+
+        mdi_type_t type = token.get_type_name();
+        if (type != MDI_INVALID_TYPE) {
+            // handle ID declarations
+            if (!parse_id_declaration(tokenizer, type)) {
+                return false;
+            }
+        } else if (token.type == TOKEN_INCLUDE) {
+            if (!parse_include(tokenizer, root)) {
+                return false;
+            }
+        } else if (token.type == TOKEN_IDENTIFIER) {
+            if (!parse_node(tokenizer, token, root)) {
+                return false;
+            }
+        } else {
+            fprintf(stderr, "Unexpected token \"%s\" at top level\n", token.string_value.c_str());
+            return false;
+        }
+    }
+
+    return true;
 }
 
 constexpr char kAuthors[] = "The Fuchsia Authors";

@@ -36,42 +36,10 @@ static bool run(std::vector<std::string>& in_paths, const char* out_path,
     // iterate through our input files
     for (auto iter = in_paths.begin(); iter != in_paths.end(); iter++) {
         const char* in_path = iter->c_str();
-        std::ifstream in_file;
-        in_file.open(in_path, std::ifstream::in);
-    
-        if (!in_file.good()) {
-            fprintf(stderr, "error: unable to open %s\n", in_path);
+        if (!process_file(in_path, root)) {
             return false;
         }
-
-        Tokenizer tokenizer(in_file);
-        while (1) {
-            Token token;
-
-            if (!tokenizer.next_token(token)) {
-                return false;
-            }
-            if (token.type == TOKEN_EOF) {
-                // on to the next input file
-                break;
-            }
-
-            // handle ID declarations        
-            mdi_type_t type = token.get_type_name();
-            if (type != MDI_INVALID_TYPE) {
-                if (!parse_id_declaration(tokenizer, type)) {
-                    return false;
-                }
-            } else if (token.type == TOKEN_IDENTIFIER) {
-                if (!parse_node(tokenizer, token, root)) {
-                    return false;
-                }
-            } else {
-                fprintf(stderr, "unexpected token \"%s\" at top level\n", token.string_value.c_str());
-                return false;
-            }
-        }
-    }
+     }
 
     root.compute_node_length();
     root.serialize(out_file);
@@ -90,7 +58,7 @@ static bool run(std::vector<std::string>& in_paths, const char* out_path,
     root.print(0);
 #endif
 
-    return 0;
+    return true;
 }
 
 int main(int argc, char* argv[]) {
@@ -138,5 +106,5 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    return run(in_paths, out_path, out_header_path);
+    return run(in_paths, out_path, out_header_path) ? 0 : -1;
 }

@@ -15,7 +15,6 @@ include make/fastboot.mk
 
 # build MDI
 MDI_SRCS := \
-    kernel/arch/arm64/include/mdi/arm64-defs.mdi \
     $(LOCAL_DIR)/trapper.mdi \
 
 EMBED_MDI:=true

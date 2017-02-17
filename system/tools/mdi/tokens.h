@@ -25,7 +25,10 @@ enum TokenType {
     TOKEN_CHILD_SEPARATOR,  // ','
     TOKEN_EQUALS,           // '='
 
-    // type names
+    // reserved words
+    TOKEN_TRUE,             // "true"
+    TOKEN_FALSE,            // "false"
+    TOKEN_INCLUDE,          // "include"
     TOKEN_INT8_TYPE,        // "int8"
     TOKEN_UINT8_TYPE,       // "uint8"
     TOKEN_INT16_TYPE,       // "int16"
@@ -38,10 +41,6 @@ enum TokenType {
     TOKEN_STRING_TYPE,      // "string"
     TOKEN_ARRAY_TYPE,       // "array"
     TOKEN_LIST_TYPE,        // "list"
-
-    // special values
-    TOKEN_TRUE,             // "true"
-    TOKEN_FALSE,            // "false"
 };
 
 TokenType find_reserved_word(std::string& string);

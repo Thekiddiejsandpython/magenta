@@ -13,6 +13,5 @@
 struct Node;
 
 const char* get_id_name(mdi_id_t id);
-bool parse_id_declaration(Tokenizer& tokenizer, mdi_type_t type);
-bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent);
+bool process_file(const char* in_path, Node& root);
 bool print_header_file(std::ofstream& out_file);

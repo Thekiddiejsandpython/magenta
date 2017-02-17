@@ -13,6 +13,9 @@ struct ReservedWord {
     TokenType   token;
     const char* word;
 } reserved_words [] = {
+    { TOKEN_TRUE,           "true" },
+    { TOKEN_FALSE,          "false" },
+    { TOKEN_INCLUDE,        "include" },
     { TOKEN_INT8_TYPE,      "int8" },
     { TOKEN_UINT8_TYPE,     "uint8" },
     { TOKEN_INT16_TYPE,     "int16" },
@@ -25,8 +28,6 @@ struct ReservedWord {
     { TOKEN_STRING_TYPE,    "string" },
     { TOKEN_ARRAY_TYPE,     "array" },
     { TOKEN_LIST_TYPE,      "list" },
-    { TOKEN_TRUE,           "true" },
-    { TOKEN_FALSE,          "false" },
     { TOKEN_INVALID,        nullptr },
 };
 
@@ -109,6 +110,15 @@ void Token::print() {
         case TOKEN_EQUALS:
             printf("TOKEN_EQUALS\n");
             break;
+        case TOKEN_TRUE:
+            printf("TOKEN_TRUE\n");
+            break;
+        case TOKEN_FALSE:
+            printf("TOKEN_FALSE\n");
+            break;
+        case TOKEN_INCLUDE:
+            printf("TOKEN_INCLUDE\n");
+            break;
         case TOKEN_INT8_TYPE:
             printf("TOKEN_INT8_TYPE\n");
             break;
@@ -144,12 +154,6 @@ void Token::print() {
             break;
         case TOKEN_LIST_TYPE:
             printf("TOKEN_LIST_TYPE\n");
-            break;
-        case TOKEN_TRUE:
-            printf("TOKEN_TRUE\n");
-            break;
-        case TOKEN_FALSE:
-            printf("TOKEN_FALSE\n");
             break;
         default:
             printf("unknown token %d\n", type);
