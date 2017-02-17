@@ -1,8 +1,9 @@
-include "kernel/arch/arm64/include/mdi/arm64-defs.mdi"
+include "kernel/include/mdi/kernel-defs.mdi"
 
 cpu-map = {
     cpu-cluster = {
         cpu-cluster-id = 0
+        cpu-cluster-name = "silver"
         cpus = {
             cpu = {
                 cpu-id = 0
@@ -20,6 +21,7 @@ cpu-map = {
     }
     cpu-cluster = {
         cpu-cluster-id = 1
+        cpu-cluster-name = "gold"
         cpus = {
             cpu = {
                 cpu-id = 128

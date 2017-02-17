@@ -1,11 +1,12 @@
 /*
- *  TYPE    ID NAME         ID NUMBER
- */
+TYPE    ID NAME         ID NUMBER
+*/
 
-    // CPU topology IDs 
-    list    cpu-map             1
-    list    cpu-cluster         2
-    uint32  cpu-cluster-id      3
-    list    cpus                4
-    list    cpu                 5
-    uint32  cpu-id              6
+// CPU topology IDs
+list    cpu-map             1
+list    cpu-cluster         2
+uint32  cpu-cluster-id      3
+string  cpu-cluster-name    4
+list    cpus                5
+list    cpu                 6
+uint32  cpu-id              7
