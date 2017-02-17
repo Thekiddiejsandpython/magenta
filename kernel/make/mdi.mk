@@ -8,6 +8,9 @@ MDI_BIN := $(BUILDDIR)/mdi.bin
 MDI_HEADER := $(BUILDDIR)/gen-mdi.h
 MDIGEN := $(BUILDDIR)/tools/mdigen
 
+# building MDI_BIN will also build MDI_HEADER
+$(MDI_HEADER): $(MDI_BIN)
+
 $(MDI_BIN): $(MDIGEN) $(MDI_SRCS)
 	@echo generating $@
 	@$(MKDIR)
