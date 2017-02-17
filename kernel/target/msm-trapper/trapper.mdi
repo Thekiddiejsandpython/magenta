@@ -1,40 +1,42 @@
 include "kernel/include/mdi/kernel-defs.mdi"
 
 cpu-map = {
-    cpu-cluster = {
-        cpu-cluster-id = 0
-        cpu-cluster-name = "silver"
-        cpus = {
-            cpu = {
-                cpu-id = 0
-            }
-            cpu = {
-                cpu-id = 1
-            }
-            cpu = {
-                cpu-id = 2
-            }
-            cpu = {
-                cpu-id = 3
-            }
+    cpu-clusters = [
+        {
+            cpu-cluster-id = 0
+            cpu-cluster-name = "silver"
+            cpus = [
+                {
+                    cpu-id = 0
+                }
+                {
+                    cpu-id = 1
+                }
+                {
+                    cpu-id = 2
+                }
+                {
+                    cpu-id = 3
+                }
+            ]
         }
-    }
-    cpu-cluster = {
-        cpu-cluster-id = 1
-        cpu-cluster-name = "gold"
-        cpus = {
-            cpu = {
-                cpu-id = 128
-            }
-            cpu = {
-                cpu-id = 129
-            }
-            cpu = {
-                cpu-id = 130
-            }
-            cpu = {
-                cpu-id = 131
-            }
+        {
+            cpu-cluster-id = 1
+            cpu-cluster-name = "gold"
+            cpus = [
+                {
+                    cpu-id = 128
+                }
+                {
+                    cpu-id = 129
+                }
+                {
+                    cpu-id = 130
+                }
+                {
+                    cpu-id = 131
+                }
+            ]
         }
-    }
+    ]
 }
