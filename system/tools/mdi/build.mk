@@ -8,7 +8,7 @@ LOCAL_DIR := $(GET_LOCAL_DIR)
 
 MDIGEN := $(BUILDDIR)/tools/mdigen
 MDIDUMP := $(BUILDDIR)/tools/mdidump
-MDIGEN_CFLAGS := -Isystem/public
+MDI_CFLAGS := -Isystem/public
 
 TOOLS := $(MDIGEN) $(MDIDUMP)
 
@@ -27,12 +27,12 @@ HEADERS := \
 $(MDIGEN): $(SRC) $(HEADERS)
 	@echo compiling $@
 	@$(MKDIR)
-	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $(SRC)
+	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDI_CFLAGS) -o $@ $(SRC)
 
-$(MDIDUMP): $(LOCAL_DIR)/mdidump.cpp
+$(MDIDUMP): $(LOCAL_DIR)/mdidump.cpp $(HEADERS)
 	@echo compiling $@
 	@$(MKDIR)
-	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDIGEN_CFLAGS) -o $@ $<
+	$(NOECHO)$(HOST_CXX) $(HOST_COMPILEFLAGS) $(HOST_CPPFLAGS) $(MDI_CFLAGS) -o $@ $<
 
 GENERATED += $(TOOLS)
 EXTRA_BUILDDEPS += $(TOOLS)

@@ -42,34 +42,6 @@ static void dump_array_node(int fd, int level, mdi_node_t& node) {
 
     printf("[ ");
     switch (node.value.array.type) {
-        case MDI_INT8:
-            for (int i = 0; i < count; i++) {
-                int8_t value;
-                read(fd, &value, sizeof(value));
-                printf("%d ", value);
-            }
-            break;
-        case MDI_UINT8:
-            for (int i = 0; i < count; i++) {
-                uint8_t value;
-                read(fd, &value, sizeof(value));
-                printf("%u ", value);
-            }
-            break;
-        case MDI_INT16:
-            for (int i = 0; i < count; i++) {
-                int16_t value;
-                read(fd, &value, sizeof(value));
-                printf("%d ", value);
-            }
-            break;
-        case MDI_UINT16:
-            for (int i = 0; i < count; i++) {
-                uint16_t value;
-                read(fd, &value, sizeof(value));
-                printf("%u ", value);
-            }
-            break;
         case MDI_INT32:
             for (int i = 0; i < count; i++) {
                 int32_t value;
@@ -82,13 +54,6 @@ static void dump_array_node(int fd, int level, mdi_node_t& node) {
                 uint32_t value;
                 read(fd, &value, sizeof(value));
                 printf("%u ", value);
-            }
-            break;
-        case MDI_INT64:
-            for (int i = 0; i < count; i++) {
-                int64_t value;
-                read(fd, &value, sizeof(value));
-                printf("%" PRId64 " ", value);
             }
             break;
         case MDI_UINT64:
@@ -158,32 +123,17 @@ static void dump_node(int fd, int level) {
     print_indent(level);
 
     switch (type) {
-        case MDI_INT8:
-            printf("int8(%u) = %d", id_num, node.value.i8);
-            break;
-        case MDI_UINT8:
-            printf("uint8(%u) = %u", id_num, node.value.u8);
-            break;
-        case MDI_INT16:
-            printf("int16(%u) = %d", id_num, node.value.i16);
-            break;
-        case MDI_UINT16:
-            printf("uint16(%u) = %u", id_num, node.value.u16);
-            break;
         case MDI_INT32:
             printf("int32(%u) = %d", id_num, node.value.i32);
             break;
         case MDI_UINT32:
             printf("uint32(%u) = %u", id_num, node.value.u32);
             break;
-        case MDI_INT64:
-            printf("int64(%u) = %" PRId64, id_num, node.value.i64);
-            break;
         case MDI_UINT64:
             printf("uint64(%u) = %" PRIu64, id_num, node.value.u64);
             break;
         case MDI_BOOLEAN:
-            printf("boolean(%u) = %s", id_num, (node.value.u8 ? "true" : "false"));
+            printf("boolean(%u) = %s", id_num, (node.value.bool_value ? "true" : "false"));
             break;
         case MDI_STRING: {
             off_t node_start = lseek(fd, 0, SEEK_CUR) - sizeof(node);
@@ -194,7 +144,7 @@ static void dump_node(int fd, int level) {
         }
         case MDI_LIST: {
             printf("list(%u) = {\n", id_num);
-            uint32_t child_count = node.value.list_count;
+            uint32_t child_count = node.value.list.count;
             for (uint32_t i = 0; i < child_count; i++) {
                 dump_node(fd, level + 1);
             }
