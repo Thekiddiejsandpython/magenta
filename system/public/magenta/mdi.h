@@ -37,6 +37,8 @@ typedef uint32_t mdi_id_t;
 #define MDI_ID_NUM(id)      ((id) & MDI_MAX_ID)
 #define MDI_ID(type, num)   ((type << MDI_ID_TYPE_SHIFT) | num)
 
+static const mdi_id_t mdi_root_id = MDI_ID(MDI_LIST, 0);
+
 // mdi_node_t represents a node in the device index.
 // For integer and boolean types, the mdi_node_t is self contained and
 // mdi_node_t.length is sizeof(mdi_node_t).

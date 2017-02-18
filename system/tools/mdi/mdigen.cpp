@@ -31,7 +31,7 @@ static bool run(std::vector<std::string>& in_paths, const char* out_path,
     }
 
     // root of our tree
-    Node    root(MDI_ID(MDI_LIST, 0));
+    Node    root(mdi_root_id);
 
     // iterate through our input files
     for (auto iter = in_paths.begin(); iter != in_paths.end(); iter++) {
