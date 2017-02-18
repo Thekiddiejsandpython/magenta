@@ -19,13 +19,8 @@ typedef uint32_t mdi_offset_t;
 // MDI node type
 typedef enum {
     MDI_INVALID_TYPE,
-    MDI_INT8,       // signed 8-bit integer type
-    MDI_UINT8,      // unsigned 8-bit integer type
-    MDI_INT16,      // signed 16-bit integer type
-    MDI_UINT16,     // unsigned 16-bit integer type
     MDI_INT32,      // signed 32-bit integer type
     MDI_UINT32,     // unsigned 32-bit integer type
-    MDI_INT64,      // signed 64-bit integer type
     MDI_UINT64,     // unsigned 64-bit integer type
     MDI_BOOLEAN,    // boolean type
     MDI_STRING,     // zero terminated char string
@@ -48,8 +43,7 @@ typedef uint32_t mdi_id_t;
 // Nodes of type MDI_STRING are immediately followed by a zero terminated char string.
 // Nodes of type MDI_LIST are followed by the list's child nodes.
 // Nodes of type MDI_ARRAY are followed by the raw array element values.
-// For arrays with integer or boolean element type, the following data is a packed
-// array of 8, 16, 32 or 64 bit integers.
+// For arrays with integer or boolean element type, the node is followed by an array array of values.
 // For arrays with element type MDI_STRING, the mdi_node_t is followed by an array of uint32_t
 // offsets to the zero terminated string values (relative to the address of the mdi_node_t),
 // and then the actual string values.
@@ -59,14 +53,10 @@ typedef struct {
     mdi_id_t    id;
     uint32_t    length;         // total length of the node, including subtree
     union {
-        int8_t      i8;
-        uint8_t     u8;         // also used for boolean
-        int16_t     i16;
-        uint16_t    u16;
         int32_t     i32;
         uint32_t    u32;
-        int64_t     i64;
         uint64_t    u64;
+        uint8_t     bool_value;
         uint32_t    str_len;    // length of zero terminated string following this struct
         struct {
             uint32_t count;     // number of list elements following this struct

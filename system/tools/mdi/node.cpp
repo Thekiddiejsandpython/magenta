@@ -34,19 +34,12 @@ void Node::print(int depth) {
     }
 
     switch (MDI_ID_TYPE(id)) {
-        case MDI_INT8:
-        case MDI_INT16:
         case MDI_INT32:
             printf("%d", (int)int_value);
             break;
-        case MDI_UINT8:
-        case MDI_UINT16:
         case MDI_UINT32:
             printf("%u", (unsigned int)int_value);
             break;         
-         case MDI_INT64:
-            printf("%" PRId64, (int64_t)int_value);
-            break;
         case MDI_UINT64:
             printf("%" PRIu64, int_value);
             break;
@@ -94,22 +87,15 @@ void Node::compute_array_length() {
     }
 
     switch (array_element_type) {
-        case MDI_INT8:
-        case MDI_UINT8:
-        case MDI_BOOLEAN:
-            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint8_t));
-            break;
-        case MDI_INT16:
-        case MDI_UINT16:
-            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint16_t));
-            break;
         case MDI_INT32:
         case MDI_UINT32:
             length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint32_t));
             break;
-        case MDI_INT64:
         case MDI_UINT64:
             length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint64_t));
+            break;
+        case MDI_BOOLEAN:
+            length = MDI_ALIGN(sizeof(mdi_node_t) + child_count * sizeof(uint8_t));
             break;
         case MDI_STRING:
         case MDI_LIST:
@@ -125,13 +111,8 @@ void Node::compute_array_length() {
 
 void Node::compute_node_length() {
     switch (MDI_ID_TYPE(id)) {
-        case MDI_INT8:
-        case MDI_UINT8:
-        case MDI_INT16:
-        case MDI_UINT16:
         case MDI_INT32:
         case MDI_UINT32:
-         case MDI_INT64:
         case MDI_UINT64:
         case MDI_BOOLEAN:
             // primitive types are self contained
@@ -176,24 +157,15 @@ bool Node::serialize(std::ofstream& out_file) {
     int child_count = children.size();
 
     switch (type) {
-        case MDI_INT8:
-        case MDI_UINT8:
-            node.value.u8 = (uint8_t)int_value;
-            break;
-        case MDI_INT16:
-        case MDI_UINT16:
-            node.value.u16 = (uint16_t)int_value;
-            break;
         case MDI_INT32:
         case MDI_UINT32:
             node.value.u32 = (uint32_t)int_value;
             break;
-        case MDI_INT64:
         case MDI_UINT64:
             node.value.u64 = int_value;
             break;
         case MDI_BOOLEAN:
-            node.value.u8 = int_value;
+            node.value.bool_value = int_value;
             break;
         case MDI_STRING:
             node.value.str_len = string_value.length() + 1;
@@ -231,25 +203,6 @@ bool Node::serialize(std::ofstream& out_file) {
         // array element values are written immediately after the mdi_node_t
         // handled differently depending on element type
         switch (array_element_type) {
-            case MDI_INT8:
-            case MDI_UINT8:
-            case MDI_BOOLEAN:
-                // raw values immediately follow node
-                for (auto iter = children.begin(); iter != children.end(); iter++) {
-                    uint8_t value = iter->int_value;
-                    out_file.write((const char *)&value, sizeof(value));
-                }
-                pad_length = child_count * sizeof(uint8_t);
-                break;
-            case MDI_INT16:
-            case MDI_UINT16:
-                // raw values immediately follow node
-                for (auto iter = children.begin(); iter != children.end(); iter++) {
-                    uint16_t value = iter->int_value;
-                    out_file.write((const char *)&value, sizeof(value));
-                }
-                pad_length = child_count * sizeof(uint16_t);
-                break;
             case MDI_INT32:
             case MDI_UINT32:
                 // raw values immediately follow node
@@ -259,7 +212,6 @@ bool Node::serialize(std::ofstream& out_file) {
                 }
                 pad_length = child_count * sizeof(uint32_t);
                 break;
-            case MDI_INT64:
             case MDI_UINT64:
                 // raw values immediately follow node
                 for (auto iter = children.begin(); iter != children.end(); iter++) {
@@ -267,6 +219,14 @@ bool Node::serialize(std::ofstream& out_file) {
                     out_file.write((const char *)&value, sizeof(value));
                 }
                 pad_length = child_count * sizeof(uint64_t);
+                break;
+            case MDI_BOOLEAN:
+                // raw values immediately follow node
+                for (auto iter = children.begin(); iter != children.end(); iter++) {
+                    uint8_t value = iter->int_value;
+                    out_file.write((const char *)&value, sizeof(value));
+                }
+                pad_length = child_count * sizeof(uint8_t);
                 break;
             case MDI_STRING:
             case MDI_LIST:

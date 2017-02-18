@@ -29,27 +29,17 @@ static inline mdi_type_t mdi_get_type(mdi_node_ref_t* ref) {
 }
 
 // node value accessors
-mx_status_t mdi_node_get_int8(mdi_node_ref_t* ref, int8_t* out_value);
-mx_status_t mdi_node_get_uint8(mdi_node_ref_t* ref, uint8_t* out_value);
-mx_status_t mdi_node_get_int16(mdi_node_ref_t* ref, int16_t* out_value);
-mx_status_t mdi_node_get_uint16(mdi_node_ref_t* ref, uint16_t* out_value);
 mx_status_t mdi_node_get_int32(mdi_node_ref_t* ref, int32_t* out_value);
 mx_status_t mdi_node_get_uint32(mdi_node_ref_t* ref, uint32_t* out_value);
-mx_status_t mdi_node_get_int64(mdi_node_ref_t* ref, int64_t* out_value);
 mx_status_t mdi_node_get_uint64(mdi_node_ref_t* ref, uint64_t* out_value);
 mx_status_t mdi_node_get_boolean(mdi_node_ref_t* ref, bool* out_value);
 const char* mdi_node_get_string(mdi_node_ref_t* ref);
 
 // array element accessors
-mx_status_t mdi_array_get_int8(mdi_node_ref_t* ref, uint32_t index, int8_t* out_value);
-mx_status_t mdi_array_get_uint8(mdi_node_ref_t* ref, uint32_t index, uint8_t* out_value);
-mx_status_t mdi_array_get_int16(mdi_node_ref_t* ref, uint32_t index, int16_t* out_value);
-mx_status_t mdi_array_get_uint16(mdi_node_ref_t* ref, uint32_t index, uint16_t* out_value);
 mx_status_t mdi_array_get_int32(mdi_node_ref_t* ref, uint32_t index, int32_t* out_value);
 mx_status_t mdi_array_get_uint32(mdi_node_ref_t* ref, uint32_t index, uint32_t* out_value);
-mx_status_t mdi_array_get_int64(mdi_node_ref_t* ref, uint32_t index, int64_t* out_value);
 mx_status_t mdi_array_get_uint64(mdi_node_ref_t* ref, uint32_t index, uint64_t* out_value);
 mx_status_t mdi_array_get_boolean(mdi_node_ref_t* ref, uint32_t index, bool* out_value);
-const char* mdi_array_get_string(mdi_node_ref_t* ref);
+const char* mdi_array_get_string(mdi_node_ref_t* ref, uint32_t index);
 
 uint32_t mdi_node_get_child_count(mdi_node_ref_t* ref);

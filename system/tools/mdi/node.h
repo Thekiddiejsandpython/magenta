@@ -12,7 +12,7 @@
 
 struct Node {
     mdi_id_t id;
-    uint64_t int_value;
+    uint64_t int_value;             // used for integer and boolean types
     std::string string_value;
     mdi_type_t array_element_type;
     uint32_t length;

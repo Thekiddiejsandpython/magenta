@@ -16,13 +16,8 @@ struct ReservedWord {
     { TOKEN_TRUE,           "true" },
     { TOKEN_FALSE,          "false" },
     { TOKEN_INCLUDE,        "include" },
-    { TOKEN_INT8_TYPE,      "int8" },
-    { TOKEN_UINT8_TYPE,     "uint8" },
-    { TOKEN_INT16_TYPE,     "int16" },
-    { TOKEN_UINT16_TYPE,    "uint16" },
     { TOKEN_INT32_TYPE,     "int32" },
     { TOKEN_UINT32_TYPE,    "uint32" },
-    { TOKEN_INT64_TYPE,     "int64" },
     { TOKEN_UINT64_TYPE,    "uint64" },
     { TOKEN_BOOLEAN_TYPE,   "boolean" },
     { TOKEN_STRING_TYPE,    "string" },
@@ -46,20 +41,10 @@ TokenType find_reserved_word(std::string& string) {
 
 mdi_type_t Token::get_type_name() {
     switch (type) {
-        case TOKEN_INT8_TYPE:
-            return MDI_INT8;
-        case TOKEN_UINT8_TYPE:
-            return MDI_UINT8;
-        case TOKEN_INT16_TYPE:
-            return MDI_INT16;
-        case TOKEN_UINT16_TYPE:
-            return MDI_UINT16;
         case TOKEN_INT32_TYPE:
             return MDI_INT32;
         case TOKEN_UINT32_TYPE:
             return MDI_UINT32;
-        case TOKEN_INT64_TYPE:
-            return MDI_INT64;
         case TOKEN_UINT64_TYPE:
             return MDI_UINT64;
         case TOKEN_BOOLEAN_TYPE:
@@ -119,26 +104,11 @@ void Token::print() {
         case TOKEN_INCLUDE:
             printf("TOKEN_INCLUDE\n");
             break;
-        case TOKEN_INT8_TYPE:
-            printf("TOKEN_INT8_TYPE\n");
-            break;
-        case TOKEN_UINT8_TYPE:
-            printf("TOKEN_UINT8_TYPE\n");
-            break;
-        case TOKEN_INT16_TYPE:
-            printf("TOKEN_INT16_TYPE\n");
-            break;
-        case TOKEN_UINT16_TYPE:
-            printf("TOKEN_UINT16_TYPE\n");
-            break;
         case TOKEN_INT32_TYPE:
             printf("TOKEN_INT32_TYPE\n");
             break;
         case TOKEN_UINT32_TYPE:
             printf("TOKEN_UINT32_TYPE\n");
-            break;
-        case TOKEN_INT64_TYPE:
-            printf("TOKEN_INT64_TYPE\n");
             break;
         case TOKEN_UINT64_TYPE:
             printf("TOKEN_UINT64_TYPE\n");

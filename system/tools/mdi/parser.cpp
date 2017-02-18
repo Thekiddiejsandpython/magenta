@@ -164,26 +164,12 @@ static bool parse_int_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, Node
     int64_t value = (int64_t)token.int_value;
 
     switch (type) {
-        case MDI_INT8:
-            if (value > INT8_MAX || value < INT8_MIN) goto out_of_range;
-            break;
-        case MDI_UINT8:
-            if (value > UINT8_MAX || value < 0) goto out_of_range;
-            break;
-        case MDI_INT16:
-            if (value > INT16_MAX || value < INT16_MIN) goto out_of_range;
-            break;
-        case MDI_UINT16:
-            if (value > UINT16_MAX || value < 0) goto out_of_range;
-            break;
         case MDI_INT32:
             if (value > INT32_MAX || value < INT32_MIN) goto out_of_range;
             break;
         case MDI_UINT32:
             if (value > UINT32_MAX || value < 0) goto out_of_range;
             break;
-        case MDI_INT64:
-            if (value > INT64_MAX || -value < INT64_MIN) goto out_of_range;
         case MDI_UINT64:
         break;
         default:
@@ -288,13 +274,8 @@ static bool parse_array_node(Tokenizer& tokenizer, Token& token, mdi_id_t id, No
         }
 
         switch (element_type) {
-            case MDI_INT8:
-            case MDI_UINT8:
-            case MDI_INT16:
-            case MDI_UINT16:
             case MDI_INT32:
             case MDI_UINT32:
-            case MDI_INT64:
             case MDI_UINT64:
                 if (!parse_int_node(tokenizer, token, element_id, node)) {
                     return false;
@@ -359,13 +340,8 @@ static bool parse_node(Tokenizer& tokenizer, Token& token, Node& parent) {
     switch (MDI_ID_TYPE(id)) {
         case MDI_LIST:
             return parse_list_node(tokenizer, value, id, parent);
-        case MDI_INT8:
-        case MDI_UINT8:
-        case MDI_INT16:
-        case MDI_UINT16:
         case MDI_INT32:
         case MDI_UINT32:
-        case MDI_INT64:
         case MDI_UINT64:
             return parse_int_node(tokenizer, value, id, parent);
         case MDI_BOOLEAN:

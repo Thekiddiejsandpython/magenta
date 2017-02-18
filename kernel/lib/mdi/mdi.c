@@ -28,42 +28,6 @@ mx_status_t mdi_init_embedded(mdi_node_ref_t* out_ref) {
 }
 #endif
 
-mx_status_t mdi_node_get_int8(mdi_node_ref_t* ref, int8_t* out_value) {
-    if (mdi_get_type(ref) != MDI_INT8) {
-        printf("bad node type for mdi_node_get_int8\n");
-        return ERR_WRONG_TYPE;
-    }
-    *out_value = ref->node->value.i8;
-    return NO_ERROR;
-}
-
-mx_status_t mdi_node_get_uint8(mdi_node_ref_t* ref, uint8_t* out_value) {
-    if (mdi_get_type(ref) != MDI_UINT8) {
-        printf("bad node type for mdi_node_get_uint8\n");
-        return ERR_WRONG_TYPE;
-    }
-    *out_value = ref->node->value.u8;
-    return NO_ERROR;
-}
-
-mx_status_t mdi_node_get_int16(mdi_node_ref_t* ref, int16_t* out_value) {
-    if (mdi_get_type(ref) != MDI_INT16) {
-        printf("bad node type for mdi_node_get_int16\n");
-        return ERR_WRONG_TYPE;
-    }
-    *out_value = ref->node->value.i16;
-    return NO_ERROR;
-}
-
-mx_status_t mdi_node_get_uint16(mdi_node_ref_t* ref, uint16_t* out_value) {
-    if (mdi_get_type(ref) != MDI_UINT16) {
-        printf("bad node type for mdi_node_get_uint16\n");
-        return ERR_WRONG_TYPE;
-    }
-    *out_value = ref->node->value.u16;
-    return NO_ERROR;
-}
-
 mx_status_t mdi_node_get_int32(mdi_node_ref_t* ref, int32_t* out_value) {
     if (mdi_get_type(ref) != MDI_INT32) {
         printf("bad node type for mdi_node_get_int32\n");
@@ -82,15 +46,6 @@ mx_status_t mdi_node_get_uint32(mdi_node_ref_t* ref, uint32_t* out_value) {
     return NO_ERROR;
 }
 
-mx_status_t mdi_node_get_int64(mdi_node_ref_t* ref, int64_t* out_value) {
-    if (mdi_get_type(ref) != MDI_INT64) {
-        printf("bad node type for mdi_node_get_int64\n");
-        return ERR_WRONG_TYPE;
-    }
-    *out_value = ref->node->value.i64;
-    return NO_ERROR;
-}
-
 mx_status_t mdi_node_get_uint64(mdi_node_ref_t* ref, uint64_t* out_value) {
     if (mdi_get_type(ref) != MDI_UINT64) {
         printf("bad node type for mdi_node_get_uint64\n");
@@ -105,7 +60,7 @@ mx_status_t mdi_node_get_boolean(mdi_node_ref_t* ref, bool* out_value) {
         printf("bad node type for mdi_node_get_boolean\n");
         return ERR_WRONG_TYPE;
     }
-    *out_value = ref->node->value.u8;
+    *out_value = ref->node->value.bool_value;
     return NO_ERROR;
 }
 
@@ -115,82 +70,6 @@ const char* mdi_node_get_string(mdi_node_ref_t* ref) {
         return NULL;
     }
     return (const char *)ref->node + sizeof(ref->node);
-}
-
-mx_status_t mdi_array_get_int8(mdi_node_ref_t* ref, uint32_t index, int8_t* out_value) {
-    if (mdi_get_type(ref) != MDI_ARRAY) {
-        printf("ref not an array in mdi_array_get_int8\n");
-        return ERR_WRONG_TYPE;
-    }
-    mdi_node_t* node = ref->node;
-    if (node->value.array.type != MDI_INT8) {
-        printf("bad array element type for mdi_array_get_int8\n");
-        return ERR_WRONG_TYPE;
-    }
-    if (index >= node->value.array.count) {
-        printf("array index out of range in mdi_array_get_int8\n");
-        return ERR_INVALID_ARGS;
-    }
-    void* array_data = (char *)node + sizeof(*node);
-    *out_value = ((int8_t *)array_data)[index];
-    return NO_ERROR;
-}
-
-mx_status_t mdi_array_get_uint8(mdi_node_ref_t* ref, uint32_t index, uint8_t* out_value) {
-    if (mdi_get_type(ref) != MDI_ARRAY) {
-        printf("ref not an array in mdi_array_get_uint8\n");
-        return ERR_WRONG_TYPE;
-    }
-    mdi_node_t* node = ref->node;
-    if (node->value.array.type != MDI_UINT8) {
-        printf("bad array element type for mdi_array_get_uint8\n");
-        return ERR_WRONG_TYPE;
-    }
-    if (index >= node->value.array.count) {
-        printf("array index out of range in mdi_array_get_uint8\n");
-        return ERR_INVALID_ARGS;
-    }
-    void* array_data = (char *)node + sizeof(*node);
-    *out_value = ((uint8_t *)array_data)[index];
-    return NO_ERROR;
-}
-
-mx_status_t mdi_array_get_int16(mdi_node_ref_t* ref, uint32_t index, int16_t* out_value) {
-    if (mdi_get_type(ref) != MDI_ARRAY) {
-        printf("ref not an array in mdi_array_get_int16\n");
-        return ERR_WRONG_TYPE;
-    }
-    mdi_node_t* node = ref->node;
-    if (node->value.array.type != MDI_INT16) {
-        printf("bad array element type for mdi_array_get_int16\n");
-        return ERR_WRONG_TYPE;
-    }
-    if (index >= node->value.array.count) {
-        printf("array index out of range in mdi_array_get_int16\n");
-        return ERR_INVALID_ARGS;
-    }
-    void* array_data = (char *)node + sizeof(*node);
-    *out_value = ((int16_t *)array_data)[index];
-    return NO_ERROR;
-}
-
-mx_status_t mdi_array_get_uint16(mdi_node_ref_t* ref, uint32_t index, uint16_t* out_value) {
-    if (mdi_get_type(ref) != MDI_ARRAY) {
-        printf("ref not an array in mdi_array_get_uint16\n");
-        return ERR_WRONG_TYPE;
-    }
-    mdi_node_t* node = ref->node;
-    if (node->value.array.type != MDI_UINT16) {
-        printf("bad array element type for mdi_array_get_uint16\n");
-        return ERR_WRONG_TYPE;
-    }
-    if (index >= node->value.array.count) {
-        printf("array index out of range in mdi_array_get_uint16\n");
-        return ERR_INVALID_ARGS;
-    }
-    void* array_data = (char *)node + sizeof(*node);
-    *out_value = ((uint16_t *)array_data)[index];
-    return NO_ERROR;
 }
 
 mx_status_t mdi_array_get_int32(mdi_node_ref_t* ref, uint32_t index, int32_t* out_value) {
@@ -228,25 +107,6 @@ mx_status_t mdi_array_get_uint32(mdi_node_ref_t* ref, uint32_t index, uint32_t* 
     }
     void* array_data = (char *)node + sizeof(*node);
     *out_value = ((uint32_t *)array_data)[index];
-    return NO_ERROR;
-}
-
-mx_status_t mdi_array_get_int64(mdi_node_ref_t* ref, uint32_t index, int64_t* out_value) {
-    if (mdi_get_type(ref) != MDI_ARRAY) {
-        printf("ref not an array in mdi_array_get_int64\n");
-        return ERR_WRONG_TYPE;
-    }
-    mdi_node_t* node = ref->node;
-    if (node->value.array.type != MDI_INT64) {
-        printf("bad array element type for mdi_array_get_int64\n");
-        return ERR_WRONG_TYPE;
-    }
-    if (index >= node->value.array.count) {
-        printf("array index out of range in mdi_array_get_int64\n");
-        return ERR_INVALID_ARGS;
-    }
-    void* array_data = (char *)node + sizeof(*node);
-    *out_value = ((int64_t *)array_data)[index];
     return NO_ERROR;
 }
 
@@ -288,9 +148,23 @@ mx_status_t mdi_array_get_boolean(mdi_node_ref_t* ref, uint32_t index, bool* out
     return NO_ERROR;
 }
 
-const char* mdi_array_get_string(mdi_node_ref_t* ref);
-
-
+const char* mdi_array_get_string(mdi_node_ref_t* ref, uint32_t index) {
+    if (mdi_get_type(ref) != MDI_ARRAY) {
+        printf("ref not an array in mdi_array_get_boolean\n");
+        return NULL;
+    }
+    mdi_node_t* node = ref->node;
+    if (node->value.array.type != MDI_STRING) {
+        printf("bad array element type for mdi_array_get_boolean\n");
+        return NULL;
+    }
+    if (index >= node->value.array.count) {
+        printf("array index out of range in mdi_array_get_boolean\n");
+        return NULL;
+    }
+    mdi_offset_t* offsets = (mdi_offset_t *)((char *)node + sizeof(*node));
+    return (const char *)node + offsets[index];
+}
 
 uint32_t mdi_node_get_child_count(mdi_node_ref_t* ref) {
     switch (mdi_get_type(ref)) {

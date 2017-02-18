@@ -10,7 +10,7 @@ string  cpu-cluster-name            4
 array[list]     cpus                5
 uint32          cpu-id              6
 
-array[int16]    test-int-array      100
+array[int32]    test-int-array      100
 array[boolean]  test-bool-array     101
 array[string]   test-string-array   102
 string          test-string         103
