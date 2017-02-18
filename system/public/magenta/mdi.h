@@ -59,7 +59,6 @@ typedef struct {
     mdi_id_t    id;
     uint32_t    length;         // total length of the node, including subtree
     union {
-        uint32_t    list_count; // number of children following this struct
         int8_t      i8;
         uint8_t     u8;         // also used for boolean
         int16_t     i16;
@@ -69,6 +68,9 @@ typedef struct {
         int64_t     i64;
         uint64_t    u64;
         uint32_t    str_len;    // length of zero terminated string following this struct
+        struct {
+            uint32_t count;     // number of list elements following this struct
+        } list;
         struct {
             mdi_type_t type;    // type of array elements following this struct
             uint32_t count;     // number of array elements following this struct

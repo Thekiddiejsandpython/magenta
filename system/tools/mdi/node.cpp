@@ -203,7 +203,7 @@ bool Node::serialize(std::ofstream& out_file) {
             node.value.array.count = children.size();
             break;
         case MDI_LIST:
-            node.value.list_count = children.size();
+            node.value.list.count = children.size();
             break;
         case MDI_INVALID_TYPE:
         default:
